@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueBook Writing Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #334155; /* Darker text */
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Calmly Writer Style for Student View */
+        #student-view.calmly-writer-mode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            padding: 2rem 1rem; /* Adjust padding */
+            background-color: #f8fafc; /* Lighter background for focus */
+        }
+        #student-view.calmly-writer-mode > .format-buttons {
+            position: sticky; /* Stays at top when scrolling */
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            max-width: 700px; /* Constrain toolbar width */
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
+        }
+        #student-view.calmly-writer-mode > .mb-6 { /* Contains essay-content */
+            width: 100%;
+            max-width: 700px; /* Constrain essay width */
+            flex-grow: 1; /* Allows essay area to expand */
+            margin-bottom: 2rem; /* Space before submit button */
+        }
+        #student-view.calmly-writer-mode #essay-content[contenteditable="true"] {
+            font-size: 1.125rem; /* Larger default font */
+            line-height: 1.8; /* More relaxed line height */
+            padding: 2.5rem; /* More internal padding */
+            border: none; /* No border for cleaner look */
+            box-shadow: none; /* No shadow */
+            background-color: transparent; /* Transparent background */
+        }
+        #student-view.calmly-writer-mode #essay-content[contenteditable="true"]:focus {
+            outline: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+        #student-view.calmly-writer-mode .info-box,
+        #student-view.calmly-writer-mode #ai-detection-result {
+            max-width: 700px; /* Constrain audit section width */
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #student-view.calmly-writer-mode .container {
+            box-shadow: none; /* Remove container shadow in this mode */
+            background-color: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+
+        /* General Styles */
+        #essay-content[contenteditable="true"] {
+            min-height: 300px;
+            border: 1px solid #cbd5e0;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        #essay-content[contenteditable="true"]:focus {
+            outline: none;
+            border-color: #38b2ac;
+            box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.4);
+        }
+
+        .info-box {
+            background-color: #e0f2fe; /* Light blue */
+            border-left: 4px solid #38b2ac; /* Teal border */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .ai-alert {
+            background-color: #fee2e2; /* Light red */
+            border-left: 4px solid #ef4444; /* Red border */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        .success-message {
+            background-color: #d1fae5; /* Light green */
+            border-left: 4px solid #10b981; /* Green border */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #38b2ac; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .view-switcher button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .view-switcher button.active {
+            background-color: #38b2ac;
+            color: white;
+            box-shadow: 0 4px 10px rgba(56, 178, 172, 0.3);
+        }
+        .view-switcher button:not(.active) {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .view-switcher button:not(.active):hover {
+            background-color: #cbd5e0;
+        }
+        .replay-content, .final-essay-content {
+            border: 1px solid #cbd5e0;
+            padding: 1rem;
+            min-height: 200px;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            word-wrap: break-word; /* Break long words */
+            flex-grow: 1; /* Allow it to take available space */
+        }
+        .paste-highlight {
+            background-color: #fcd34d; /* Yellow-300 */
+            transition: background-color 0.5s ease-out;
+        }
+        .replay-controls button {
+            background-color: #4c51bf;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .replay-controls button:hover {
+            background-color: #5a62c9;
+        }
+        .replay-controls button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .edit-log-sidebar {
+            width: 280px; /* Fixed width for the sidebar */
+            min-width: 280px;
+            max-height: 600px; /* Limit height to prevent overflow */
+            overflow-y: auto;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+        .edit-log-item {
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            position: relative; /* For annotation positioning */
+        }
+        .edit-log-item:hover {
+            background-color: #edf2f7;
+        }
+        .edit-log-item.active {
+            background-color: #bee3f8; /* Light blue highlight for active item */
+            font-weight: bold;
+        }
+        .format-buttons {
+            background-color: #e2e8f0; /* Light gray background for the toolbar */
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem; /* Spacing between buttons/selects */
+            align-items: center;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .format-buttons button, .format-buttons select {
+            background-color: #cbd5e0; /* Slightly darker gray for controls */
+            color: #2d3748; /* Dark text */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #a0aec0; /* Subtle border */
+            cursor: pointer;
+            min-width: 40px; /* Ensure buttons have a minimum width */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .format-buttons button:hover, .format-buttons select:hover {
+            background-color: #a0aec0; /* Darker on hover */
+            transform: translateY(-1px); /* Slight lift effect */
+        }
+        .format-buttons button.active {
+            background-color: #38b2ac; /* Teal for active state */
+            color: white;
+            box-shadow: 0 2px 5px rgba(56, 178, 172, 0.4);
+            border-color: #38b2ac;
+        }
+        .format-buttons select {
+            padding-right: 2rem; /* Make space for dropdown arrow */
+            -webkit-appearance: none; /* Remove default arrow */
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.25em;
+            color: #2d3748; /* Dark text for select */
+        }
+        .paste-annotation {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background-color: #fcd34d;
+            color: #78350f;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            pointer-events: none; /* Allow clicks to pass through */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease-in-out;
+        }
+        .paste-highlight-wrapper {
+            position: relative;
+            display: inline-block; /* To contain the absolute annotation */
+        }
+        .paste-highlight-wrapper .paste-annotation.show {
+            opacity: 1;
+        }
+
+        /* Maximize View Styles */
+        .maximized-view-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff; /* Solid background when maximized */
+            z-index: 1000; /* Ensure it's on top */
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            box-shadow: none; /* Remove shadow when maximized */
+            border-radius: 0; /* Remove border-radius when maximized */
+        }
+        .maximized-view-overlay .close-maximize-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #ef4444; /* Red for close */
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001; /* Ensure button is above content */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .maximized-view-overlay .close-maximize-btn:hover {
+            background-color: #dc2626;
+        }
+        .maximized-view-overlay .essay-content-and-log {
+            flex-grow: 1;
+            display: flex;
+            gap: 1.5rem;
+            overflow: hidden; /* Prevent inner scrollbars from affecting outer layout */
+        }
+        .maximized-view-overlay #overlay-essay-display,
+        .maximized-view-overlay #overlay-replay-content {
+            height: 100%; /* Take full height of flex container */
+            min-height: unset; /* Override fixed min-height */
+            flex-grow: 1; /* Allow content to grow */
+        }
+        .maximized-view-overlay #overlay-edit-log {
+            height: 100%; /* Take full full height of flex container */
+            min-height: unset; /* Override fixed min-height */
+            max-height: unset; /* Override max-height */
+        }
+        .maximize-btn {
+            /* Now part of replay-controls flex, so no absolute positioning needed here */
+            background-color: #a0aec0;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-left: 0.5rem; /* Add some space from speed selector */
+        }
+        .maximize-btn:hover {
+            background-color: #718096;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">BlueBook Writing Platform</h1>
+        <p class="text-center text-gray-600 mb-8">Your secure environment for authentic writing. All activity is audited to ensure academic integrity.</p>
+
+        <div class="view-switcher flex justify-center space-x-4 mb-8">
+            <button id="student-view-btn" class="active">Student View</button>
+            <button id="instructor-view-btn">Instructor View</button>
+        </div>
+
+        <div id="auth-status" class="text-center mb-4 text-gray-700">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                Initializing application...
+            </div>
+        </div>
+
+        <!-- Student View -->
+        <div id="student-view" class="calmly-writer-mode">
+            <div class="mb-4 format-buttons">
+                <button id="bold-btn"><b>B</b></button>
+                <button id="italic-btn"><i>I</i></button>
+                <button id="underline-btn"><u>U</u></button>
+                <button id="ul-btn">UL</button>
+                <button id="ol-btn">OL</button>
+
+                <select id="font-family-select">
+                    <option value="Inter, sans-serif">Inter</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="Times New Roman, serif">Times New Roman</option>
+                    <option value="Courier New, monospace">Courier New</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+
+                <select id="font-size-select">
+                    <option value="1">Small</option>
+                    <option value="2">Medium</option>
+                    <option value="3" selected>Normal</option>
+                    <option value="4">Large</option>
+                    <option value="5">X-Large</option>
+                    <option value="6">XX-Large</option>
+                </select>
+
+                <select id="header-select">
+                    <option value="p">Paragraph</option>
+                    <option value="h1">Header 1</option>
+                    <option value="h2">Header 2</option>
+                    <option value="h3">Header 3</option>
+                </select>
+
+                <button id="justify-left-btn">Left</button>
+                <button id="justify-center-btn">Center</button>
+                <button id="justify-right-btn">Right</button>
+                <button id="justify-full-btn">Justify</button>
+
+                <button id="indent-btn">Indent</button>
+                <button id="blockquote-btn">Quote</button>
+
+                <select id="line-height-select">
+                    <option value="1.0">Single</option>
+                    <option value="1.15">1.15</option>
+                    <option value="1.5">1.5 Lines</option>
+                    <option value="2.0">Double</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="essay-content" class="block text-gray-700 text-lg font-semibold mb-2 sr-only">Your Essay:</label> <!-- sr-only to hide visually -->
+                <div id="essay-content" contenteditable="true"
+                     class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm"
+                     placeholder="Start writing your essay here..."></div>
+            </div>
+
+            <button id="submit-essay"
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-75">
+                Submit Essay
+            </button>
+
+            <div id="message-box" class="mt-4"></div>
+
+            <div class="mt-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Writing Process Audit:</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="info-box">
+                        <p class="font-medium text-gray-800">Keystrokes: <span id="keystroke-count" class="font-bold text-teal-700">0</span></p>
+                    </div>
+                    <div class="info-box">
+                        <p class="font-medium text-gray-800">Typing Speed (WPM): <span id="typing-speed" class="font-bold text-teal-700">0</span></p>
+                    </div>
+                    <div class="info-box">
+                        <p class="font-medium text-gray-800">Tab Switches: <span id="tab-switch-count" class="font-bold text-teal-700">0</span></p>
+                    </div>
+                    <div class="info-box">
+                        <p class="font-medium text-gray-800">Paste Events: <span id="paste-count" class="font-bold text-teal-700">0</span></p>
+                    </div>
+                </div>
+                <div id="ai-detection-result" class="mt-4">
+                    <!-- AI detection results will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructor View -->
+        <div id="instructor-view" class="hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Instructor Dashboard</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Essay List -->
+                <div class="md:col-span-1 bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Submitted Essays:</h3>
+                    <ul id="essay-list" class="space-y-2">
+                        <li class="text-gray-500">No essays submitted yet.</li>
+                    </ul>
+                </div>
+
+                <!-- Essay Detail & Replay -->
+                <div id="essay-detail-pane" class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg relative">
+                    <h3 id="selected-essay-title" class="text-2xl font-bold text-gray-800 mb-4">Select an Essay to View Details</h3>
+                    <div id="essay-detail-content" class="hidden">
+                        <p class="text-gray-600 mb-4"><strong>Student ID:</strong> <span id="detail-student-id"></span></p>
+                        <p class="text-gray-600 mb-4"><strong>Submitted At:</strong> <span id="detail-submitted-at"></span></p>
+                        <p class="text-gray-600 mb-4"><strong>Word Count:</strong> <span id="detail-word-count"></span></p>
+
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="text-xl font-semibold text-blue-800 mb-2">Simulated AI Detection Score: <span id="detail-ai-score" class="text-blue-900">N/A</span></h4>
+                            <div id="detail-ai-explanation" class="text-blue-700 text-sm"></div>
+                        </div>
+
+                        <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Audit Statistics:</h4>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="info-box">Keystrokes: <span id="detail-keystrokes" class="font-bold text-teal-700"></span></div>
+                            <div class="info-box">Avg. Typing Speed (WPM): <span id="detail-avg-typing-speed" class="font-bold text-teal-700"></span></div>
+                            <div class="info-box">Tab Switches: <span id="detail-tab-switches" class="font-bold text-teal-700"></span></div>
+                            <div class="info-box">Paste Events: <span id="detail-paste-events" class="font-bold text-teal-700"></span></div>
+                        </div>
+
+                        <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Writing Process Replay & Edit Log:</h4>
+                        <div class="replay-controls flex items-center space-x-4 mb-4">
+                            <button id="play-replay-btn">Play Replay</button>
+                            <button id="stop-replay-btn" disabled>Stop</button>
+                            <input type="range" id="replay-scrub" min="0" max="100" value="0" class="flex-grow">
+                            <span id="replay-time">0:00 / 0:00</span>
+                            <select id="playback-speed-select" class="px-2 py-1 rounded-lg text-sm bg-gray-200 text-gray-700">
+                                <option value="1">1x</option>
+                                <option value="2">2x</option>
+                                <option value="5" selected>5x</option>
+                                <option value="10">10x</option>
+                            </select>
+                            <button id="maximize-btn" class="maximize-btn"> [ ] </button> <!-- Moved maximize button -->
+                        </div>
+
+                        <div class="flex space-x-4 essay-content-and-log">
+                            <!-- Main Essay Content / Replay Area -->
+                            <div id="instructor-essay-display" class="final-essay-content">
+                                <!-- Final essay content will be displayed here initially -->
+                            </div>
+                            <div id="replay-content" class="replay-content hidden">
+                                <!-- Replay content will be displayed here during replay -->
+                            </div>
+
+                            <!-- Edit Log Sidebar -->
+                            <div class="edit-log-sidebar">
+                                <h5 class="text-lg font-medium text-gray-700 mb-2">Event Log:</h5>
+                                <div id="edit-log" class="text-sm text-gray-700">
+                                    No edits logged.
+                                </div>
+                            </div>
+                        </div>
+                        <button id="download-docx-btn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">Download as .docx</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maximize Overlay Container (hidden by default) -->
+    <div id="maximize-overlay" class="hidden maximized-view-overlay">
+        <button id="close-maximize-overlay-btn" class="close-maximize-btn">X</button>
+        <!-- Cloned replay controls for overlay -->
+        <div class="replay-controls flex items-center space-x-4 mb-4">
+            <button id="overlay-play-replay-btn">Play Replay</button>
+            <button id="overlay-stop-replay-btn" disabled>Stop</button>
+            <input type="range" id="overlay-replay-scrub" min="0" max="100" value="0" class="flex-grow">
+            <span id="overlay-replay-time">0:00 / 0:00</span>
+            <select id="overlay-playback-speed-select" class="px-2 py-1 rounded-lg text-sm bg-gray-200 text-gray-700">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="5" selected>5x</option>
+                <option value="10">10x</option>
+            </select>
+        </div>
+        <div class="flex space-x-4 essay-content-and-log">
+            <div id="overlay-essay-display" class="final-essay-content"></div>
+            <div id="overlay-replay-content" class="replay-content hidden"></div>
+            <div id="overlay-edit-log" class="edit-log-sidebar"></div>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, serverTimestamp, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Global Variables (Provided by Canvas Environment) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+
+        // --- Firebase Initialization ---
+        let app;
+        let db;
+        let auth;
+        let userId = 'anonymous'; // Default to anonymous until authenticated
+        let isAuthReady = false;
+
+        // --- DOM Elements ---
+        const authStatusElement = document.getElementById('auth-status');
+        const messageBox = document.getElementById('message-box');
+
+        // Student View Elements
+        const studentViewBtn = document.getElementById('student-view-btn');
+        const instructorViewBtn = document.getElementById('instructor-view-btn');
+        const studentViewDiv = document.getElementById('student-view');
+        const instructorViewDiv = document.getElementById('instructor-view');
+        const essayContentElement = document.getElementById('essay-content'); // Now a contenteditable div
+        const submitEssayButton = document.getElementById('submit-essay');
+        const keystrokeCountElement = document.getElementById('keystroke-count');
+        const typingSpeedElement = document.getElementById('typing-speed');
+        const tabSwitchCountElement = document.getElementById('tab-switch-count');
+        const pasteCountElement = document.getElementById('paste-count');
+        const aiDetectionResultElement = document.getElementById('ai-detection-result');
+
+        // Rich Text Formatting Buttons
+        const boldBtn = document.getElementById('bold-btn');
+        const italicBtn = document.getElementById('italic-btn');
+        const underlineBtn = document.getElementById('underline-btn');
+        const ulBtn = document.getElementById('ul-btn');
+        const olBtn = document.getElementById('ol-btn');
+        const fontFamilySelect = document.getElementById('font-family-select');
+        const fontSizeSelect = document.getElementById('font-size-select');
+        const headerSelect = document.getElementById('header-select');
+        const justifyLeftBtn = document.getElementById('justify-left-btn');
+        const justifyCenterBtn = document.getElementById('justify-center-btn');
+        const justifyRightBtn = document.getElementById('justify-right-btn');
+        const justifyFullBtn = document.getElementById('justify-full-btn');
+        const indentBtn = document.getElementById('indent-btn');
+        const blockquoteBtn = document.getElementById('blockquote-btn');
+        const lineHeightSelect = document.getElementById('line-height-select');
+
+
+        // Instructor View Elements
+        const essayListElement = document.getElementById('essay-list');
+        const selectedEssayTitleElement = document.getElementById('selected-essay-title');
+        const essayDetailContentDiv = document.getElementById('essay-detail-content');
+        const detailStudentIdElement = document.getElementById('detail-student-id');
+        const detailSubmittedAtElement = document.getElementById('detail-submitted-at');
+        const detailWordCountElement = document.getElementById('detail-word-count');
+        const detailAiScoreElement = document.getElementById('detail-ai-score');
+        const detailAiExplanationElement = document.getElementById('detail-ai-explanation');
+        const detailKeystrokesElement = document.getElementById('detail-keystrokes');
+        const detailAvgTypingSpeedElement = document.getElementById('detail-avg-typing-speed');
+        const detailTabSwitchesElement = document.getElementById('detail-tab-switches');
+        const detailPasteEventsElement = document.getElementById('detail-paste-events');
+        const editLogElement = document.getElementById('edit-log');
+        const instructorEssayDisplayElement = document.getElementById('instructor-essay-display'); // New element for static essay display
+        const replayContentElement = document.getElementById('replay-content');
+        const playReplayBtn = document.getElementById('play-replay-btn');
+        const stopReplayBtn = document.getElementById('stop-replay-btn'); // Renamed from pauseReplayBtn
+        const replayScrubElement = document.getElementById('replay-scrub');
+        const replayTimeElement = document.getElementById('replay-time');
+        const playbackSpeedSelect = document.getElementById('playback-speed-select');
+        const maximizeBtn = document.getElementById('maximize-btn');
+        const essayDetailPane = document.getElementById('essay-detail-pane');
+        const downloadDocxBtn = document.getElementById('download-docx-btn');
+
+        // Maximize Overlay Elements
+        const maximizeOverlay = document.getElementById('maximize-overlay');
+        const closeMaximizeOverlayBtn = document.getElementById('close-maximize-overlay-btn');
+        const overlayEssayDisplay = document.getElementById('overlay-essay-display');
+        const overlayReplayContent = document.getElementById('overlay-replay-content');
+        const overlayEditLog = document.getElementById('overlay-edit-log');
+        const overlayPlayReplayBtn = document.getElementById('overlay-play-replay-btn');
+        const overlayStopReplayBtn = document.getElementById('overlay-stop-replay-btn');
+        const overlayReplayScrub = document.getElementById('overlay-replay-scrub');
+        const overlayReplayTime = document.getElementById('overlay-replay-time');
+        const overlayPlaybackSpeedSelect = document.getElementById('overlay-playback-speed-select');
+
+
+        // Audit data storage for student view
+        let auditLog = {
+            events: [], // Unified array for all events: { type, timestamp, textContentLength, htmlContent, ...eventSpecificData }
+            typingSessions: [], // Still keep this for WPM calculation
+            currentSession: {
+                start: null,
+                chars: 0,
+                lastKeystrokeTime: null
+            },
+            lastContentLength: 0 // For AI detection (textContent length)
+        };
+
+        let lastTypingSpeedCalculationTime = Date.now();
+        let lastCharCountForSpeed = 0; // Tracks textContent length for WPM
+
+        // Replay variables
+        let replayIntervalId = null;
+        let replayCurrentIndex = 0;
+        let replayAuditLog = []; // This will hold the combined and sorted events for replay
+        let replayPlainTextContent = ""; // The plain text content being built during replay (for main view)
+        let overlayReplayPlainTextContent = ""; // The plain text content being built during replay (for overlay)
+        let replayStartTime = 0; // Timestamp when replay starts
+        let replaySpeed = parseInt(playbackSpeedSelect.value); // Get initial speed from selector
+        let replayTimeoutId = null; // To store the timeout for the next replay event
+        let currentEssayDataForReplay = null; // Store the full essay data for replay
+
+        // --- UI Message Functions ---
+        function showMessage(message, type = 'info') {
+            let className = 'info-box';
+            if (type === 'error') className = 'ai-alert'; // Reusing for errors
+            if (type === 'success') className = 'success-message';
+            if (type === 'warning') className = 'ai-alert'; // Reusing for warnings
+
+            messageBox.innerHTML = `<div class="${className}"><p>${message}</p></div>`;
+            messageBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                messageBox.innerHTML = '';
+            }, 5000); // Clear message after 5 seconds
+        }
+
+        // --- Firebase Setup and Authentication ---
+        async function setupFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        authStatusElement.innerHTML = `<p class="text-green-700 font-semibold">Authenticated as: <span class="font-bold">${userId}</span></p>`;
+                        isAuthReady = true;
+                        console.log("Firebase authenticated. User ID:", userId);
+                        // Load essays for instructor view if it's the default view
+                        if (!studentViewDiv.classList.contains('hidden')) { // Check if student view is active, otherwise instructor view is the default
+                             // Do nothing, student view is default
+                        } else {
+                            loadSubmittedEssays();
+                        }
+                    } else {
+                        // Sign in anonymously if no token is provided or token fails
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } catch (error) {
+                                console.error("Error signing in with custom token:", error);
+                                showMessage("Authentication failed. Signing in anonymously.", "error");
+                                await signInAnonymously(auth);
+                            }
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                authStatusElement.innerHTML = `<p class="text-red-600 font-semibold">Error initializing Firebase. Check console.</p>`;
+                showMessage("Failed to initialize the application. Please try again later.", "error");
+            }
+        }
+
+        // --- Student View Rich Text Formatting ---
+        function formatDoc(command, value = null) {
+            document.execCommand(command, false, value);
+            essayContentElement.focus(); // Keep focus on the editable div
+            // Record content state after formatting change
+            recordAuditEvent('format', { command: command, value: value, textContentLength: essayContentElement.textContent.length, htmlContent: essayContentElement.innerHTML });
+            updateFormatBarState(); // Update bar after applying format
+        }
+
+        function setLineHeight(value) {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            let commonAncestor = range.commonAncestorContainer;
+
+            // Ensure commonAncestor is an Element node
+            if (commonAncestor && commonAncestor.nodeType === Node.TEXT_NODE) {
+                commonAncestor = commonAncestor.parentNode;
+            }
+
+            // Find the closest block-level parent (p, div, h1 etc.)
+            let blockElement = commonAncestor && commonAncestor.nodeType === Node.ELEMENT_NODE && commonAncestor.matches('p, div, h1, h2, h3, blockquote, li') ? commonAncestor : (commonAncestor ? commonAncestor.closest('p, div, h1, h2, h3, blockquote, li') : null);
+
+            if (blockElement) {
+                blockElement.style.lineHeight = value;
+            } else {
+                try {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.lineHeight = value;
+                    range.surroundContents(tempDiv);
+                } catch (e) {
+                    console.warn("Could not apply line-height directly, selection might be complex.", e);
+                    document.execCommand('formatBlock', false, 'div');
+                    const newBlock = selection.focusNode.closest('div');
+                    if (newBlock) newBlock.style.lineHeight = value;
+                }
+            }
+            essayContentElement.focus();
+            recordAuditEvent('format', { command: 'lineHeight', value: value, textContentLength: essayContentElement.textContent.length, htmlContent: essayContentElement.innerHTML });
+            updateFormatBarState(); // Update bar after applying format
+        }
+
+        // --- Unified Audit Event Recording ---
+        function recordAuditEvent(type, eventData) {
+            const timestamp = Date.now();
+            setTimeout(() => {
+                const currentTextContentLength = essayContentElement.textContent.length;
+                const currentHtmlContent = essayContentElement.innerHTML;
+
+                auditLog.events.push({
+                    type: type,
+                    timestamp: timestamp,
+                    textContentLength: currentTextContentLength,
+                    htmlContent: currentHtmlContent,
+                    ...eventData
+                });
+                if (type === 'keypress') {
+                    keystrokeCountElement.textContent = parseInt(keystrokeCountElement.textContent) + 1;
+                } else if (type === 'paste') {
+                    pasteCountElement.textContent = parseInt(pasteCountElement.textContent) + 1;
+                }
+            }, 0);
+        }
+
+        // --- Audit Functions (Student View) ---
+        function recordKeystroke(event) {
+            recordAuditEvent('keypress', { key: event.key });
+            const timestamp = Date.now();
+            if (!auditLog.currentSession.start) {
+                auditLog.currentSession.start = timestamp;
+            }
+            auditLog.currentSession.chars++;
+            auditLog.currentSession.lastKeystrokeTime = timestamp;
+            calculateTypingSpeed();
+        }
+
+        function calculateTypingSpeed() {
+            const now = Date.now();
+            const timeElapsed = (now - lastTypingSpeedCalculationTime) / 1000;
+
+            if (timeElapsed >= 1) {
+                const currentContentLength = essayContentElement.textContent.length;
+                const charsTyped = currentContentLength - lastCharCountForSpeed;
+                const wordsTyped = charsTyped / 5;
+                const wpm = wordsTyped / (timeElapsed / 60);
+
+                typingSpeedElement.textContent = Math.round(wpm);
+
+                lastTypingSpeedCalculationTime = now;
+                lastCharCountForSpeed = currentContentLength;
+            }
+
+            if (auditLog.currentSession.lastKeystrokeTime && (now - auditLog.currentSession.lastKeystrokeTime > 2000)) {
+                auditLog.typingSessions.push({
+                    start: auditLog.currentSession.start,
+                    end: auditLog.currentSession.lastKeystrokeTime,
+                    chars: auditLog.currentSession.chars
+                });
+                auditLog.currentSession = { start: null, chars: 0, lastKeystrokeTime: null };
+            }
+        }
+
+        function recordTabSwitch(event) {
+            const timestamp = Date.now();
+            if (event.type === 'blur') {
+                recordAuditEvent('tabSwitch', { eventType: 'blur', htmlContent: essayContentElement.innerHTML });
+                tabSwitchCountElement.textContent = parseInt(tabSwitchCountElement.textContent) + 1;
+            }
+        }
+
+        function recordPaste(event) {
+            event.preventDefault();
+            const pastedText = event.clipboardData.getData('text/plain');
+            
+            document.execCommand('insertText', false, pastedText);
+
+            recordAuditEvent('paste', { length: pastedText.length, pastedText: pastedText, htmlContent: essayContentElement.innerHTML });
+            showMessage(`Detected paste of ${pastedText.length} characters.`, 'warning');
+        }
+
+        // --- Simulated AI Detection Logic ---
+        function runAIDetectionSimulation(auditData) {
+            let suspiciousActivity = [];
+            let aiScore = 0;
+
+            const keypressEvents = auditData.events.filter(e => e.type === 'keypress');
+            const pasteEvents = auditData.events.filter(e => e.type === 'paste');
+            const tabSwitchEvents = auditData.events.filter(e => e.type === 'tabSwitch');
+
+            if (pasteEvents.length > 0) {
+                pasteEvents.forEach(paste => {
+                    let contentBeforePasteLength = 0;
+                    const relevantEventsBeforePaste = auditData.events.filter(e => e.timestamp < paste.timestamp && typeof e.textContentLength === 'number');
+                    if (relevantEventsBeforePaste.length > 0) {
+                        contentBeforePasteLength = relevantEventsBeforePaste[relevantEventsBeforePaste.length - 1].textContentLength;
+                    }
+
+                    if (paste.length > 500 && contentBeforePasteLength < 50) {
+                        suspiciousActivity.push("Large paste detected early in the writing process.");
+                        aiScore += 30;
+                    } else if (paste.length > 200) {
+                        suspiciousActivity.push(`Significant paste of ${paste.length} characters detected.`);
+                        aiScore += 10;
+                    }
+                });
+            }
+
+            let totalTypingDuration = 0;
+            let totalTypingChars = 0;
+            auditData.typingSessions.forEach(session => {
+                const durationSeconds = (session.end - session.start) / 1000;
+                if (durationSeconds > 0) {
+                    totalTypingDuration += durationSeconds;
+                    totalTypingChars += session.chars;
+                }
+            });
+
+            if (totalTypingDuration > 0) {
+                const avgWPM = (totalTypingChars / 5) / (totalTypingDuration / 60);
+                if (avgWPM > 70) {
+                    suspiciousActivity.push(`Average typing speed of ${Math.round(avgWPM)} WPM, which is unusually high and consistent.`);
+                    aiScore += 25;
+                } else if (avgWPM > 50) {
+                    suspiciousActivity.push(`Average typing speed of ${Math.round(avgWPM)} WPM.`);
+                    aiScore += 5;
+                }
+            }
+
+            let activeWritingTime = 0;
+            if (auditData.events.length > 0) {
+                const firstEventTimestamp = auditData.events[0].timestamp;
+                const lastEventTimestamp = auditData.events[auditData.events.length - 1].timestamp;
+                activeWritingTime = lastEventTimestamp - firstEventTimestamp;
+            }
+
+            let tabSwitchDuringActiveWriting = 0;
+            if (activeWritingTime > 0) {
+                 tabSwitchEvents.forEach(ts => {
+                    if (ts.timestamp >= auditData.events[0].timestamp && ts.timestamp <= auditData.events[auditData.events.length - 1].timestamp) {
+                        tabSwitchDuringActiveWriting++;
+                    }
+                });
+            }
+
+            if (activeWritingTime > 60000 && (tabSwitchDuringActiveWriting / (activeWritingTime / 60000) > 1)) {
+                suspiciousActivity.push(`Frequent tab switching (${tabSwitchDuringActiveWriting} times) detected during active writing.`);
+                aiScore += 20;
+            }
+
+            const totalEssayDuration = auditData.events.length > 0 ? auditData.events[auditData.events.length - 1].timestamp - auditData.events[0].timestamp : 0;
+            const essayWordCount = auditData.events.length > 0 ? auditData.events[auditData.events.length - 1].textContentLength : 0;
+            const minutesTaken = totalEssayDuration / (1000 * 60);
+
+            if (essayWordCount > 500 && minutesTaken < 10) {
+                suspiciousActivity.push(`Very short writing duration (${Math.round(minutesTaken)} minutes) for a ${essayWordCount}-character essay.`);
+                aiScore += 40;
+            }
+
+            aiScore = Math.min(100, aiScore);
+
+            return { score: aiScore, explanations: suspiciousActivity };
+        }
+
+
+        // --- Save Data to Firestore (Student View) ---
+        async function saveEssayAndAuditData() {
+            if (!isAuthReady) {
+                showMessage("Application not fully initialized. Please wait.", "error");
+                return;
+            }
+
+            submitEssayButton.disabled = true;
+            submitEssayButton.textContent = 'Submitting...';
+
+            const essayContent = essayContentElement.innerHTML;
+
+            if (auditLog.currentSession.start) {
+                auditLog.typingSessions.push({
+                    start: auditLog.currentSession.start,
+                    end: Date.now(),
+                    chars: auditLog.currentSession.chars
+                });
+                auditLog.currentSession = { start: null, chars: 0, lastKeystrokeTime: null };
+            }
+
+            const aiDetection = runAIDetectionSimulation(auditLog);
+
+            try {
+                const userDocRef = doc(collection(db, `artifacts/${appId}/users/${userId}/essays`));
+
+                await setDoc(userDocRef, {
+                    essayContent: essayContent,
+                    auditLog: JSON.parse(JSON.stringify(auditLog)),
+                    submittedAt: serverTimestamp(),
+                    wordCount: essayContentElement.textContent.split(/\s+/).filter(word => word.length > 0).length,
+                    aiDetectionScore: aiDetection.score,
+                    aiDetectionExplanations: aiDetection.explanations
+                });
+
+                showMessage("Essay and audit data saved successfully!", "success");
+                console.log("Document written with ID: ", userDocRef.id);
+
+                if (aiDetection.explanations.length > 0) {
+                    aiDetectionResultElement.innerHTML = `
+                        <div class="ai-alert">
+                            <p class="font-bold text-red-700 mb-2">Simulated AI Detection Score: ${aiDetection.score}%</p>
+                            <p class="font-bold text-red-700 mb-2">Potential AI Activity Detected:</p>
+                            <ul class="list-disc list-inside">
+                                ${aiDetection.explanations.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                            <p class="mt-2 text-sm">This is a simulated detection based on writing patterns. A real system would use more sophisticated analysis.</p>
+                        </div>
+                    `;
+                } else {
+                    aiDetectionResultElement.innerHTML = `
+                        <div class="success-message">
+                            <p class="font-bold text-green-700">Simulated AI Detection Score: ${aiDetection.score}%</p>
+                            <p class="font-bold text-green-700">No suspicious AI activity detected based on current patterns.</p>
+                        </div>
+                    `;
+                }
+
+                auditLog = {
+                    events: [],
+                    typingSessions: [],
+                    currentSession: { start: null, chars: 0, lastKeystrokeTime: null },
+                    lastContentLength: 0
+                };
+                keystrokeCountElement.textContent = '0';
+                typingSpeedElement.textContent = '0';
+                tabSwitchCountElement.textContent = '0';
+                pasteCountElement.textContent = '0';
+                essayContentElement.innerHTML = '';
+
+            } catch (e) {
+                console.error("Error adding document to Firestore:", e);
+                showMessage("Failed to save essay. Please try again.", "error");
+            } finally {
+                submitEssayButton.disabled = false;
+                submitEssayButton.textContent = 'Submit Essay';
+            }
+        }
+
+        // --- Instructor View Functions ---
+        async function loadSubmittedEssays() {
+            if (!isAuthReady) {
+                essayListElement.innerHTML = '<li class="text-gray-500">Authentication not ready. Please wait.</li>';
+                return;
+            }
+            if (!db) {
+                console.error("Firestore database (db) is not initialized.");
+                essayListElement.innerHTML = '<li class="text-red-500">Database not initialized.</li>';
+                return;
+            }
+            if (!auth.currentUser || !auth.currentUser.uid) {
+                console.warn("User is not fully authenticated. Cannot load essays.");
+                essayListElement.innerHTML = '<li class="text-gray-500">Waiting for user authentication...</li>';
+                return;
+            }
+
+            essayListElement.innerHTML = '<li class="loading-indicator"><div class="spinner"></div> Loading essays...</li>';
+            try {
+                const collectionPath = `artifacts/${appId}/users/${auth.currentUser.uid}/essays`;
+                console.log(`Attempting to load essays from: ${collectionPath}`);
+                console.log(`Current authenticated user UID: ${auth.currentUser.uid}`);
+
+                const q = query(collection(db, collectionPath), orderBy("submittedAt", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    essayListElement.innerHTML = '<li class="text-gray-500">No essays submitted yet.</li>';
+                    return;
+                }
+
+                essayListElement.innerHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (!data) {
+                        console.warn(`Skipping document ${doc.id} with no data.`);
+                        return;
+                    }
+
+                    const listItem = document.createElement('li');
+                    listItem.className = 'p-3 bg-white rounded-md shadow-sm cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out';
+                    
+                    const studentIdDisplay = data.userId ? data.userId.substring(0, 8) + '...' : 'N/A';
+                    const submittedAtDisplay = data.submittedAt ? new Date(data.submittedAt.toDate()).toLocaleString() : 'N/A';
+                    const aiScoreDisplay = typeof data.aiDetectionScore === 'number' ? data.aiDetectionScore : 'N/A';
+                    const aiScoreClass = aiScoreDisplay > 50 ? 'text-red-600' : 'text-green-600';
+
+                    listItem.innerHTML = `
+                        <p class="font-semibold text-gray-800">Essay ID: ${doc.id.substring(0, 8)}...</p>
+                        <p class="text-sm text-gray-600">Student: ${studentIdDisplay}</p>
+                        <p class="text-sm text-gray-600">Submitted: ${submittedAtDisplay}</p>
+                        <p class="text-sm text-gray-600">AI Score: <span class="font-bold ${aiScoreClass}">${aiScoreDisplay}%</span></p>
+                    `;
+                    listItem.addEventListener('click', () => displayEssayDetails(doc.id, data));
+                    essayListElement.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error("Error loading essays:", error);
+                if (error.code === 'permission-denied') {
+                    essayListElement.innerHTML = '<li class="text-red-500">Permission denied. Check Firestore security rules.</li>';
+                } else if (error.code === 'failed-precondition' && error.message.includes('The query requires an index')) {
+                     essayListElement.innerHTML = '<li class="text-red-500">Firestore index missing. Check console for details.</li>';
+                }
+                else {
+                    essayListElement.innerHTML = '<li class="text-red-500">Error loading essays. See console for details.</li>';
+                }
+            }
+        }
+
+        function displayEssayDetails(essayId, data) {
+            selectedEssayTitleElement.textContent = `Details for Essay: ${essayId.substring(0, 8)}...`;
+            essayDetailContentDiv.classList.remove('hidden');
+
+            detailStudentIdElement.textContent = data.userId;
+            detailSubmittedAtElement.textContent = data.submittedAt ? new Date(data.submittedAt.toDate()).toLocaleString() : 'N/A';
+            detailWordCountElement.textContent = data.wordCount;
+
+            detailAiScoreElement.textContent = `${data.aiDetectionScore}%`;
+            detailAiScoreElement.className = `font-bold ${data.aiDetectionScore > 50 ? 'text-red-600' : 'text-green-600'}`;
+            detailAiExplanationElement.innerHTML = data.aiDetectionExplanations && data.aiDetectionExplanations.length > 0
+                ? `<ul class="list-disc list-inside">${data.aiDetectionExplanations.map(item => `<li>${item}</li>`).join('')}</ul>`
+                : 'No specific suspicious patterns detected by the simulated AI.';
+
+            detailKeystrokesElement.textContent = data.auditLog.events.filter(e => e.type === 'keypress').length;
+            const totalTypingDuration = data.auditLog.typingSessions.reduce((sum, s) => sum + (s.end - s.start), 0) / 1000;
+            const totalTypingChars = data.auditLog.typingSessions.reduce((sum, s) => sum + s.chars, 0);
+            const avgWPM = totalTypingDuration > 0 ? (totalTypingChars / 5) / (totalTypingDuration / 60) : 0;
+            detailAvgTypingSpeedElement.textContent = Math.round(avgWPM);
+            detailTabSwitchesElement.textContent = data.auditLog.events.filter(e => e.type === 'tabSwitch').length;
+            detailPasteEventsElement.textContent = data.auditLog.events.filter(e => e.type === 'paste').length;
+
+            // Display final essay content initially
+            instructorEssayDisplayElement.innerHTML = data.essayContent; // Use innerHTML for rich text
+            instructorEssayDisplayElement.classList.remove('hidden');
+            replayContentElement.classList.add('hidden'); // Hide replay area initially
+
+            // Store full essay data for replay
+            currentEssayDataForReplay = data;
+
+            // Prepare replay data: use the unified events array
+            replayAuditLog = (data.auditLog && Array.isArray(data.auditLog.events)) ? data.auditLog.events.sort((a, b) => a.timestamp - b.timestamp) : [];
+            
+            playReplayBtn.disabled = replayAuditLog.length === 0;
+            stopReplayBtn.disabled = true; // Stop button disabled initially
+
+
+            // Populate Edit Log sidebar with grouped keystrokes and other events
+            editLogElement.innerHTML = '';
+            if (replayAuditLog.length === 0) {
+                editLogElement.textContent = 'No edits logged.';
+            } else {
+                let currentKeystrokeGroup = [];
+                let lastKeystrokeTimestampInGroup = null;
+
+                const addGroupedKeystrokeEntry = (group, startIndex) => {
+                    if (group.length === 0) return;
+
+                    const firstKeystrokeEvent = group[0];
+                    const lastKeystrokeEvent = group[group.length - 1];
+                    
+                    const startContentLength = startIndex > 0 ? replayAuditLog[startIndex - 1].textContentLength : 0;
+                    const endContentLength = lastKeystrokeEvent.textContentLength;
+                    const numChars = endContentLength - startContentLength;
+                    const durationMs = lastKeystrokeEvent.timestamp - firstKeystrokeEvent.timestamp;
+                    const timeString = new Date(lastKeystrokeEvent.timestamp).toLocaleTimeString(); // Use end time for display
+
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'edit-log-item';
+                    logEntry.innerHTML = `<span class="font-medium">${timeString}:</span> Typed ${numChars} chars over ${formatTime(durationMs)}.`;
+                    logEntry.dataset.timestamp = lastKeystrokeEvent.timestamp; // Store end timestamp for jumping
+                    logEntry.dataset.index = startIndex; // Store the index of the first event in the group
+                    logEntry.addEventListener('click', () => jumpToReplayTime(lastKeystrokeEvent.timestamp, startIndex, replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect));
+                    editLogElement.appendChild(logEntry);
+                };
+
+                for (let i = 0; i < replayAuditLog.length; i++) {
+                    const event = replayAuditLog[i];
+
+                    if (event.type === 'keypress') {
+                        if (currentKeystrokeGroup.length > 0 && (event.timestamp - lastKeystrokeTimestampInGroup > 5000)) {
+                            addGroupedKeystrokeEntry(currentKeystrokeGroup, i - currentKeystrokeGroup.length);
+                            currentKeystrokeGroup = [];
+                        }
+                        currentKeystrokeGroup.push(event);
+                        lastKeystrokeTimestampInGroup = event.timestamp;
+                    } else {
+                        if (currentKeystrokeGroup.length > 0) {
+                            addGroupedKeystrokeEntry(currentKeystrokeGroup, i - currentKeystrokeGroup.length);
+                            currentKeystrokeGroup = [];
+                        }
+                        const timeString = new Date(event.timestamp).toLocaleTimeString();
+                        const logEntry = document.createElement('div');
+                        logEntry.className = 'edit-log-item';
+                        let logText = '';
+                        if (event.type === 'paste') {
+                            logText = `<span class="font-medium">${timeString}:</span> Pasted ${event.length} characters.`;
+                        } else if (event.type === 'tabSwitch') {
+                            logText = `<span class="font-medium">${timeString}:</span> Window ${event.eventType}.`;
+                        } else if (event.type === 'format') {
+                            logText = `<span class="font-medium">${timeString}:</span> Formatted: ${event.command} ${event.value ? `(${event.value})` : ''}.`;
+                        }
+                        logEntry.innerHTML = logText;
+                        logEntry.dataset.timestamp = event.timestamp;
+                        logEntry.dataset.index = i;
+                        logEntry.addEventListener('click', () => jumpToReplayTime(event.timestamp, i, replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect));
+                        editLogElement.appendChild(logEntry);
+                        lastKeystrokeTimestampInGroup = null;
+                    }
+                }
+
+                if (currentKeystrokeGroup.length > 0) {
+                    addGroupedKeystrokeEntry(currentKeystrokeGroup, replayAuditLog.indexOf(currentKeystrokeGroup[0]));
+                }
+            }
+
+            // `replayContent` is not a global variable. It's a local variable within `startReplay` and `jumpToReplayTime`.
+            // Removed the problematic line: replayContent = "";
+            replayCurrentIndex = 0;
+            replayScrubElement.value = 0;
+            updateReplayTimeDisplay(0, 0);
+            playReplayBtn.disabled = false;
+            stopReplayBtn.disabled = true; // Ensure stop button is disabled when not playing
+            // Call stopReplay with main view elements
+            stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
+        }
+
+        // --- Replay Functions (Generic for Main View and Overlay) ---
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function updateReplayTimeDisplay(currentTimeMs, totalTimeMs) {
+            // Update main view controls
+            replayTimeElement.textContent = `${formatTime(currentTimeMs)} / ${formatTime(totalTimeMs)}`;
+            if (totalTimeMs > 0) {
+                replayScrubElement.value = (currentTimeMs / totalTimeMs) * 100;
+            }
+            // Update overlay controls
+            overlayReplayTime.textContent = `${formatTime(currentTimeMs)} / ${formatTime(totalTimeMs)}`;
+            if (totalTimeMs > 0) {
+                overlayReplayScrub.value = (currentTimeMs / totalTimeMs) * 100;
+            }
+        }
+
+        function startReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
+            if (replayIntervalId) return; // Only one replay can run at a time
+
+            if (replayAuditLog.length === 0) {
+                showMessage("No audit data to replay.", "warning");
+                return;
+            }
+
+            // Hide static essay, show replay area
+            if (isOverlay) {
+                overlayEssayDisplay.classList.add('hidden');
+                overlayReplayContent.classList.remove('hidden');
+            } else {
+                instructorEssayDisplayElement.classList.add('hidden');
+                replayContentElement.classList.remove('hidden');
+            }
+            
+            // Reconstruct content up to the current index (HTML for format/paste, plain text for keypress)
+            let currentReplayContent = "";
+            let currentReplayPlainTextContent = "";
+            for (let i = 0; i <= replayCurrentIndex && i < replayAuditLog.length; i++) {
+                const event = replayAuditLog[i];
+                if (event.type === 'keypress') {
+                    if (event.key === 'Backspace') {
+                        currentReplayPlainTextContent = currentReplayPlainTextContent.slice(0, -1);
+                    } else if (event.key === 'Enter') {
+                        currentReplayPlainTextContent += '\n';
+                    } else if (event.key.length === 1) {
+                        currentReplayPlainTextContent += event.key;
+                    }
+                    contentElement.textContent = currentReplayPlainTextContent;
+                } else if (event.type === 'paste' || event.type === 'format') {
+                    contentElement.innerHTML = event.htmlContent;
+                    currentReplayPlainTextContent = contentElement.textContent;
+                }
+            }
+            contentElement.scrollTop = contentElement.scrollHeight;
+
+
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+
+
+            const firstTimestamp = replayAuditLog[0].timestamp;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1].timestamp;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+
+            let initialDelay = 0;
+            if (replayCurrentIndex > 0) {
+                initialDelay = (replayAuditLog[replayCurrentIndex].timestamp - replayAuditLog[replayCurrentIndex - 1].timestamp) / replaySpeed;
+            }
+            initialDelay = Math.max(initialDelay, 5);
+
+            replayStartTime = Date.now() - (replayAuditLog[replayCurrentIndex]?.timestamp - firstTimestamp) / replaySpeed;
+
+            const processNextEvent = () => {
+                if (replayCurrentIndex >= replayAuditLog.length) {
+                    stopReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay);
+                    showMessage("Replay finished!", "success");
+                    return;
+                }
+
+                const event = replayAuditLog[replayCurrentIndex];
+                const currentReplayTime = (event.timestamp - firstTimestamp);
+                updateReplayTimeDisplay(currentReplayTime, totalReplayDuration);
+
+                let delay = 0;
+                if (replayCurrentIndex > 0) {
+                    delay = (event.timestamp - replayAuditLog[replayCurrentIndex - 1].timestamp) / replaySpeed;
+                }
+                delay = Math.max(delay, 5);
+
+                if (event.type === 'keypress') {
+                    if (event.key === 'Backspace') {
+                        currentReplayPlainTextContent = currentReplayPlainTextContent.slice(0, -1);
+                    } else if (event.key === 'Enter') {
+                        currentReplayPlainTextContent += '\n';
+                    } else if (event.key.length === 1) {
+                        currentReplayPlainTextContent += event.key;
+                    }
+                    contentElement.textContent = currentReplayPlainTextContent;
+                    contentElement.scrollTop = contentElement.scrollHeight;
+                } else if (event.type === 'paste' || event.type === 'format') {
+                    contentElement.innerHTML = event.htmlContent;
+                    currentReplayPlainTextContent = contentElement.textContent;
+
+                    if (event.type === 'paste') {
+                        contentElement.classList.add('paste-highlight');
+                        const annotationSpan = document.createElement('span');
+                        annotationSpan.className = 'paste-annotation show';
+                        annotationSpan.textContent = 'Pasted!';
+                        contentElement.appendChild(annotationSpan);
+
+                        setTimeout(() => {
+                            contentElement.classList.remove('paste-highlight');
+                            if (annotationSpan.parentNode) {
+                                annotationSpan.parentNode.removeChild(annotationSpan);
+                            }
+                        }, 1000);
+                    }
+                    contentElement.scrollTop = contentElement.scrollHeight;
+                } else if (event.type === 'tabSwitch') {
+                    console.log(`Replay: Tab switch (${event.eventType}) at ${new Date(event.timestamp).toLocaleTimeString()}`);
+                }
+
+                // Highlight current event in the correct edit log
+                if (isOverlay) {
+                    highlightOverlayEditLogItem(replayCurrentIndex);
+                } else {
+                    highlightEditLogItem(replayCurrentIndex);
+                }
+
+                replayCurrentIndex++;
+                replayTimeoutId = setTimeout(processNextEvent, delay);
+            };
+
+            replayIntervalId = setTimeout(processNextEvent, initialDelay);
+        }
+
+        function pauseReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
+            clearTimeout(replayTimeoutId);
+            replayIntervalId = null;
+            playBtn.disabled = false;
+            stopBtn.disabled = false;
+        }
+
+        function stopReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
+            pauseReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay);
+            contentElement.innerHTML = '';
+            // Make sure to reset replayPlainTextContent for the correct context
+            if (isOverlay) {
+                overlayReplayPlainTextContent = "";
+            } else {
+                replayPlainTextContent = "";
+            }
+            replayCurrentIndex = 0;
+            scrubElement.value = 0;
+            updateReplayTimeDisplay(0, 0);
+            
+            playBtn.disabled = replayAuditLog.length === 0;
+            stopBtn.disabled = true;
+
+            // Switch back to static essay display
+            if (isOverlay) {
+                overlayEssayDisplay.classList.remove('hidden');
+                overlayReplayContent.classList.add('hidden');
+                removeHighlightFromOverlayEditLog(); // Corrected call
+            } else {
+                instructorEssayDisplayElement.classList.remove('hidden');
+                replayContentElement.classList.add('hidden');
+                removeHighlightFromEditLog();
+            }
+        }
+
+        function jumpToReplayTime(timestamp, index, contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
+            stopReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay);
+
+            let targetIndex = index;
+            if (index === undefined) {
+                targetIndex = replayAuditLog.findIndex(event => event.timestamp >= timestamp);
+                if (targetIndex === -1) targetIndex = replayAuditLog.length - 1;
+                if (targetIndex > 0 && replayAuditLog[targetIndex].timestamp > timestamp) {
+                    targetIndex--;
+                }
+            }
+            targetIndex = Math.max(0, targetIndex);
+
+            replayCurrentIndex = targetIndex;
+            
+            // Reconstruct content up to the target index (HTML for format/paste, plain text for keypress)
+            contentElement.innerHTML = "";
+            // Make sure to update the correct plain text content variable
+            let currentReplayPlainTextContentRef;
+            if (isOverlay) {
+                currentReplayPlainTextContentRef = overlayReplayPlainTextContent;
+            } else {
+                currentReplayPlainTextContentRef = replayPlainTextContent;
+            }
+
+            for (let i = 0; i <= replayCurrentIndex && i < replayAuditLog.length; i++) {
+                const event = replayAuditLog[i];
+                if (event.type === 'keypress') {
+                    if (event.key === 'Backspace') {
+                        currentReplayPlainTextContentRef = currentReplayPlainTextContentRef.slice(0, -1);
+                    } else if (event.key === 'Enter') {
+                        currentReplayPlainTextContentRef += '\n';
+                    } else if (event.key.length === 1) {
+                        currentReplayPlainTextContentRef += event.key;
+                    }
+                    contentElement.textContent = currentReplayPlainTextContentRef;
+                } else if (event.type === 'paste' || event.type === 'format') {
+                    contentElement.innerHTML = event.htmlContent;
+                    currentReplayPlainTextContentRef = contentElement.textContent;
+                }
+            }
+            // Assign back to the global variable
+            if (isOverlay) {
+                overlayReplayPlainTextContent = currentReplayPlainTextContentRef;
+            } else {
+                replayPlainTextContent = currentReplayPlainTextContentRef;
+            }
+
+            contentElement.classList.remove('hidden');
+            if (isOverlay) {
+                overlayEssayDisplay.classList.add('hidden');
+            } else {
+                instructorEssayDisplayElement.classList.add('hidden');
+            }
+            contentElement.scrollTop = contentElement.scrollHeight;
+
+
+            const firstTimestamp = replayAuditLog[0] ? replayAuditLog[0].timestamp : 0;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1] ? replayAuditLog[replayAuditLog.length - 1].timestamp : 0;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+            const currentReplayTime = replayAuditLog[replayCurrentIndex] ? (replayAuditLog[replayCurrentIndex].timestamp - firstTimestamp) : 0;
+            updateReplayTimeDisplay(currentReplayTime, totalReplayDuration);
+
+            // Highlight in the correct edit log
+            if (isOverlay) {
+                highlightOverlayEditLogItem(replayCurrentIndex);
+            } else {
+                highlightEditLogItem(replayCurrentIndex);
+            }
+
+            if (replayCurrentIndex < replayAuditLog.length - 1) {
+                playBtn.disabled = false;
+            } else {
+                playBtn.disabled = true;
+            }
+            stopBtn.disabled = false;
+        }
+
+        function highlightEditLogItem(index) {
+            removeHighlightFromEditLog(editLogElement); // Pass the editLogElement
+            const logItems = editLogElement.children;
+            for (let i = 0; i < logItems.length; i++) {
+                if (parseInt(logItems[i].dataset.index) === index) {
+                    logItems[i].classList.add('active');
+                    logItems[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    break;
+                }
+            }
+        }
+
+        function removeHighlightFromEditLog(targetEditLogElement) { // Accept targetEditLogElement
+            const activeItem = targetEditLogElement.querySelector('.edit-log-item.active');
+            if (activeItem) {
+                activeItem.classList.remove('active');
+            }
+        }
+
+        // --- Update Formatting Bar State ---
+        function updateFormatBarState() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            let selectedNode = selection.focusNode;
+            // Ensure selectedNode is an Element node
+            if (selectedNode && selectedNode.nodeType === Node.TEXT_NODE) {
+                selectedNode = selectedNode.parentNode;
+            }
+            // If selectedNode is null or not within the essay content, return
+            if (!selectedNode || selectedNode.nodeType !== Node.ELEMENT_NODE || !essayContentElement.contains(selectedNode)) {
+                return;
+            }
+
+            [boldBtn, italicBtn, underlineBtn, ulBtn, olBtn, justifyLeftBtn, justifyCenterBtn, justifyRightBtn, justifyFullBtn, blockquoteBtn].forEach(btn => btn.classList.remove('active'));
+
+            if (document.queryCommandState('bold')) boldBtn.classList.add('active');
+            if (document.queryCommandState('italic')) italicBtn.classList.add('active');
+            if (document.queryCommandState('underline')) underlineBtn.classList.add('active');
+            if (document.queryCommandState('insertUnorderedList')) ulBtn.classList.add('active');
+            if (document.queryCommandState('insertOrderedList')) olBtn.classList.add('active');
+            if (document.queryCommandState('justifyLeft')) justifyLeftBtn.classList.add('active');
+            if (document.queryCommandState('justifyCenter')) justifyCenterBtn.classList.add('active');
+            if (document.queryCommandState('justifyRight')) justifyRightBtn.classList.add('active');
+            if (document.queryCommandState('justifyFull')) justifyFullBtn.classList.add('active');
+
+            let currentBlock = selectedNode.closest('blockquote');
+            if (currentBlock && essayContentElement.contains(currentBlock)) {
+                blockquoteBtn.classList.add('active');
+            }
+
+            const fontFamily = document.queryCommandValue('fontName');
+            const normalizedFontFamily = fontFamily.replace(/"/g, '').toLowerCase();
+            let foundFont = false;
+            for (let i = 0; i < fontFamilySelect.options.length; i++) {
+                if (fontFamilySelect.options[i].value.toLowerCase().includes(normalizedFontFamily)) {
+                    fontFamilySelect.value = fontFamilySelect.options[i].value;
+                    foundFont = true;
+                    break;
+                }
+            }
+            if (!foundFont) {
+                fontFamilySelect.value = 'Inter, sans-serif';
+            }
+
+            const fontSize = document.queryCommandValue('fontSize');
+            if (fontSize) {
+                fontSizeSelect.value = fontSize;
+            } else {
+                fontSizeSelect.value = '3';
+            }
+
+            let headerTag = 'p';
+            let currentHeader = selectedNode.closest('h1, h2, h3, p');
+            if (currentHeader && essayContentElement.contains(currentHeader)) {
+                headerTag = currentHeader.tagName.toLowerCase();
+            }
+            headerSelect.value = headerTag;
+
+            let currentLineHeight = '1.6';
+            let tempNode = selectedNode;
+            while(tempNode && tempNode !== essayContentElement) {
+                const computedLineHeight = window.getComputedStyle(tempNode).lineHeight;
+                if (computedLineHeight && computedLineHeight !== 'normal') {
+                    const fontSizePx = parseFloat(window.getComputedStyle(tempNode).fontSize);
+                    if (fontSizePx > 0) {
+                        const unitlessLineHeight = parseFloat(computedLineHeight) / fontSizePx;
+                        if (Math.abs(unitlessLineHeight - 1.0) < 0.05) { currentLineHeight = '1.0'; break; }
+                        else if (Math.abs(unitlessLineHeight - 1.15) < 0.05) { currentLineHeight = '1.15'; break; }
+                        else if (Math.abs(unitlessLineHeight - 1.5) < 0.05) { currentLineHeight = '1.5'; break; }
+                        else if (Math.abs(unitlessLineHeight - 2.0) < 0.05) { currentLineHeight = '2.0'; break; }
+                    } else if (['1', '1.15', '1.5', '2'].includes(computedLineHeight)) {
+                        currentLineHeight = computedLineHeight;
+                        break;
+                    }
+                }
+                tempNode = tempNode.parentElement;
+            }
+            lineHeightSelect.value = currentLineHeight;
+        }
+
+
+        // --- View Switcher Logic ---
+        function showStudentView() {
+            document.body.classList.remove('maximized-view-active');
+            document.querySelector('.container').classList.remove('maximized-view-active');
+            maximizeOverlay.classList.add('hidden'); // Ensure overlay is hidden
+
+            studentViewDiv.style.display = 'flex'; // Explicitly show student view
+            instructorViewDiv.style.display = 'none'; // Explicitly hide instructor view
+            studentViewBtn.classList.add('active');
+            instructorViewBtn.classList.remove('active');
+            essayDetailContentDiv.classList.add('hidden');
+            selectedEssayTitleElement.textContent = "Select an Essay to View Details";
+            stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
+        }
+
+        async function showInstructorView() {
+            document.body.classList.remove('maximized-view-active');
+            document.querySelector('.container').classList.remove('maximized-view-active');
+            maximizeOverlay.classList.add('hidden'); // Ensure overlay is hidden
+
+            studentViewDiv.style.display = 'none'; // Explicitly hide student view
+            instructorViewDiv.style.display = 'block'; // Explicitly show instructor view
+            studentViewBtn.classList.remove('active');
+            instructorViewBtn.classList.add('active');
+            await loadSubmittedEssays();
+        }
+
+        // --- Maximize/Minimize Instructor View ---
+        function toggleMaximizeView() {
+            const isMaximized = maximizeOverlay.classList.toggle('hidden'); // Toggle visibility of the overlay
+            
+            if (!isMaximized) { // If it's now visible (maximized)
+                // Clone content into the overlay
+                overlayEssayDisplay.innerHTML = instructorEssayDisplayElement.innerHTML;
+                // Clear and repopulate overlayEditLog to ensure event listeners are attached
+                overlayEditLog.innerHTML = '';
+                const logItems = editLogElement.children;
+                for (let i = 0; i < logItems.length; i++) {
+                    const clonedItem = logItems[i].cloneNode(true);
+                    // Re-attach event listener for the cloned item
+                    const originalIndex = parseInt(logItems[i].dataset.index);
+                    const originalTimestamp = parseInt(logItems[i].dataset.timestamp);
+                    // Pass overlay elements to jumpToReplayTime for clicks within the overlay log
+                    clonedItem.addEventListener('click', () => jumpToReplayTime(originalTimestamp, originalIndex, overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true));
+                    overlayEditLog.appendChild(clonedItem);
+                }
+
+
+                // Set initial visibility based on current state
+                if (instructorEssayDisplayElement.classList.contains('hidden')) { // If replay was active in main view
+                    overlayEssayDisplay.classList.add('hidden');
+                    overlayReplayContent.classList.remove('hidden');
+                    // If replay was running, start it in the overlay
+                    if (replayIntervalId) {
+                        stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect); // Stop main replay
+                        startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true); // Start new replay in overlay
+                    } else {
+                        // If replay was paused/stopped in main view, initialize overlay replay content to current state
+                        overlayReplayContent.innerHTML = replayContentElement.innerHTML;
+                    }
+                } else { // If final essay was active in main view
+                    overlayEssayDisplay.classList.remove('hidden');
+                    overlayReplayContent.classList.add('hidden');
+                }
+
+                // Hide the main instructor view content when overlay is active
+                essayDetailContentDiv.classList.add('hidden');
+
+            } else { // If it's now hidden (minimized)
+                // Stop any replay running in the overlay
+                stopReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
+                // Restore main instructor view content
+                essayDetailContentDiv.classList.remove('hidden');
+                // Ensure the correct display is shown in the main view after minimizing
+                if (replayIntervalId) { // If replay was running when maximized
+                    instructorEssayDisplayElement.classList.add('hidden');
+                    replayContentElement.classList.remove('hidden');
+                } else { // If final essay was shown when maximized
+                    instructorEssayDisplayElement.classList.remove('hidden');
+                    replayContentElement.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- Replay functions specifically for the overlay ---
+        // These now call the generic startReplay/stopReplay/jumpToReplayTime functions
+        // and pass the overlay-specific elements and a flag.
+
+        // --- Download as Docx Function ---
+        function downloadDocx() {
+            if (!currentEssayDataForReplay || !currentEssayDataForReplay.essayContent) {
+                showMessage("No essay selected to download.", "warning");
+                return;
+            }
+
+            const essayHtml = currentEssayDataForReplay.essayContent;
+            
+            // Safely get userId and submittedAt for filename
+            const downloadUserId = currentEssayDataForReplay.userId || 'unknown_user';
+            const downloadSubmittedAt = currentEssayDataForReplay.submittedAt ? new Date(currentEssayDataForReplay.submittedAt.toDate()).toLocaleDateString() : 'N/A_date';
+            const filename = `essay_${downloadUserId.substring(0, 8)}_${downloadSubmittedAt}.doc`;
+
+
+            // Simple HTML to DOC conversion
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Document</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + essayHtml + footer;
+
+            const blob = new Blob([sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+
+        // --- Event Listeners ---
+        // Student View Listeners
+        essayContentElement.addEventListener('keydown', recordKeystroke);
+        essayContentElement.addEventListener('paste', recordPaste);
+        window.addEventListener('blur', recordTabSwitch);
+        submitEssayButton.addEventListener('click', saveEssayAndAuditData);
+
+        // Rich Text Formatting Listeners
+        boldBtn.addEventListener('click', () => formatDoc('bold'));
+        italicBtn.addEventListener('click', () => formatDoc('italic'));
+        underlineBtn.addEventListener('click', () => formatDoc('underline'));
+        ulBtn.addEventListener('click', () => formatDoc('insertUnorderedList'));
+        olBtn.addEventListener('click', () => formatDoc('insertOrderedList'));
+        fontFamilySelect.addEventListener('change', (event) => formatDoc('fontName', event.target.value));
+        fontSizeSelect.addEventListener('change', (event) => formatDoc('fontSize', event.target.value));
+        headerSelect.addEventListener('change', (event) => formatDoc('formatBlock', `<${event.target.value}>`));
+        justifyLeftBtn.addEventListener('click', () => formatDoc('justifyLeft'));
+        justifyCenterBtn.addEventListener('click', () => formatDoc('justifyCenter'));
+        justifyRightBtn.addEventListener('click', () => formatDoc('justifyRight'));
+        justifyFullBtn.addEventListener('click', () => formatDoc('justifyFull'));
+        
+        indentBtn.addEventListener('click', () => {
+            const selection = window.getSelection();
+            if (selection.rangeCount) {
+                const range = selection.getRangeAt(0);
+                let currentElement = range.commonAncestorContainer;
+                if (currentElement && currentElement.nodeType === Node.TEXT_NODE) {
+                    currentElement = currentElement.parentNode;
+                }
+                const parentBlock = currentElement ? currentElement.closest('p, div, li, blockquote') : null;
+
+                if (parentBlock && (parentBlock.tagName === 'LI' || parentBlock.tagName === 'BLOCKQUOTE' || (parentBlock.style && parentBlock.style.marginLeft))) {
+                    formatDoc('outdent');
+                } else {
+                    formatDoc('indent');
+                }
+            } else {
+                formatDoc('indent');
+            }
+        });
+
+        blockquoteBtn.addEventListener('click', () => {
+            const selection = window.getSelection();
+            if (selection.rangeCount) {
+                const range = selection.getRangeAt(0);
+                let currentElement = range.commonAncestorContainer;
+                if (currentElement && currentElement.nodeType === Node.TEXT_NODE) {
+                    currentElement = currentElement.parentNode;
+                }
+                const currentBlockquote = currentElement ? currentElement.closest('blockquote') : null;
+
+                if (currentBlockquote && essayContentElement.contains(currentBlockquote)) {
+                    formatDoc('formatBlock', 'p');
+                    document.execCommand('removeFormat', false, 'fontstyle'); // Remove italic
+                } else {
+                    formatDoc('formatBlock', 'blockquote'); // Use blockquote tag
+                    formatDoc('italic'); // Apply italic for quotes
+                }
+            } else {
+                formatDoc('formatBlock', 'blockquote'); // Use blockquote tag
+                formatDoc('italic'); // Apply italic for quotes
+            }
+        });
+        lineHeightSelect.addEventListener('change', (event) => setLineHeight(event.target.value));
+
+        document.addEventListener('selectionchange', updateFormatBarState);
+
+
+        // Instructor View Listeners (main view controls)
+        playReplayBtn.addEventListener('click', () => startReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false));
+        stopReplayBtn.addEventListener('click', () => stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false));
+        maximizeBtn.addEventListener('click', toggleMaximizeView); // Maximize button for main view
+
+        playbackSpeedSelect.addEventListener('change', (event) => {
+            replaySpeed = parseInt(event.target.value);
+            if (replayIntervalId) { // Check if main replay is active
+                clearTimeout(replayTimeoutId);
+                replayIntervalId = null;
+                startReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false);
+            }
+        });
+
+        replayScrubElement.addEventListener('input', (event) => {
+            if (replayAuditLog.length === 0) return;
+            const percentage = parseFloat(event.target.value) / 100;
+            const firstTimestamp = replayAuditLog[0].timestamp;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1].timestamp;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+            const targetTime = firstTimestamp + (totalReplayDuration * percentage);
+
+            let closestIndex = 0;
+            let minDiff = Infinity;
+            for (let i = 0; i < replayAuditLog.length; i++) {
+                const diff = Math.abs(replayAuditLog[i].timestamp - targetTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = i;
+                }
+            }
+            jumpToReplayTime(replayAuditLog[closestIndex].timestamp, closestIndex, replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false);
+        });
+
+
+        // Overlay playback controls listeners (specific to the fullscreen overlay)
+        overlayPlayReplayBtn.addEventListener('click', () => startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true));
+        overlayStopReplayBtn.addEventListener('click', () => stopReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true));
+        closeMaximizeOverlayBtn.addEventListener('click', toggleMaximizeView); // Close button for overlay
+
+        overlayPlaybackSpeedSelect.addEventListener('change', (event) => {
+            replaySpeed = parseInt(event.target.value);
+            if (overlayReplayIntervalId) { // Check if overlay replay is active
+                clearTimeout(overlayReplayTimeoutId);
+                overlayReplayIntervalId = null;
+                startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
+            }
+        });
+        overlayReplayScrub.addEventListener('input', (event) => {
+            if (replayAuditLog.length === 0) return;
+            const percentage = parseFloat(event.target.value) / 100;
+            const firstTimestamp = replayAuditLog[0].timestamp;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1].timestamp;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+            const targetTime = firstTimestamp + (totalReplayDuration * percentage);
+
+            let closestIndex = 0;
+            let minDiff = Infinity;
+            for (let i = 0; i < replayAuditLog.length; i++) {
+                const diff = Math.abs(replayAuditLog[i].timestamp - targetTime);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = i;
+                }
+            }
+            jumpToReplayTime(replayAuditLog[closestIndex].timestamp, closestIndex, overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
+        });
+
+
+        // View Switcher Listeners
+        studentViewBtn.addEventListener('click', showStudentView);
+        instructorViewBtn.addEventListener('click', showInstructorView);
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFirebase();
+            showStudentView();
+        });
+
+    </script>
+</body>
+</html>
