@@ -1704,7 +1704,7 @@
             
             // Safely get userId and submittedAt for filename
             const downloadUserId = currentEssayDataForReplay.userId || 'unknown_user';
-            const downloadSubmittedAt = currentEssayDataForReplay.submittedAt ? new Date(currentEssayDataForReplay.submittedAt.toDate()).toLocaleDateString() : 'N/A_date';
+            const downloadSubmittedAt = currentEssayDataForReplay.submittedAt ? new Date(currentEssayDataForReplay.submittedAt.toDate()).toISOString().slice(0, 10) : 'no_date';
             const filename = `essay_${downloadUserId.substring(0, 8)}_${downloadSubmittedAt}.doc`;
 
 
@@ -1797,6 +1797,7 @@
         playReplayBtn.addEventListener('click', () => startReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false));
         stopReplayBtn.addEventListener('click', () => stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect, false));
         maximizeBtn.addEventListener('click', toggleMaximizeView); // Maximize button for main view
+        downloadDocxBtn.addEventListener('click', downloadDocx);
 
         playbackSpeedSelect.addEventListener('change', (event) => {
             replaySpeed = parseInt(event.target.value);
