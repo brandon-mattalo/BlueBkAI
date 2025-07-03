@@ -362,6 +362,8 @@
                 Initializing application...
             </div>
         </div>
+        <!-- New element for displaying Firebase init errors on the UI -->
+        <div id="firebase-error-display" class="hidden ai-alert text-center"></div>
 
         <!-- Student View -->
         <div id="student-view" class="calmly-writer-mode">
@@ -553,23 +555,18 @@
 
         // --- Global Variables (Provided by Canvas Environment) ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "firebase/app";
-        import { getAnalytics } from "firebase/analytics";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-
         // Your web app's Firebase configuration
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-        apiKey: "AIzaSyBPa2H04I8UOSyKsVlkCwoBFMly8dgaJSs",
-        authDomain: "bluebk-5fe7a.firebaseapp.com",
-        projectId: "bluebk-5fe7a",
-        storageBucket: "bluebk-5fe7a.firebasestorage.app",
-        messagingSenderId: "497596508627",
-        appId: "1:497596508627:web:fdde63e0d7150a1c746726",
-        measurementId: "G-LMJWFJ0CE3"
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "YOUR_API_KEY", // Replace with your actual API Key if not using Canvas environment
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
         };
+        
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
 
         // --- Firebase Initialization ---
@@ -582,6 +579,7 @@
         // --- DOM Elements ---
         const authStatusElement = document.getElementById('auth-status');
         const messageBox = document.getElementById('message-box');
+        const firebaseErrorDisplay = document.getElementById('firebase-error-display'); // New error display element
 
         // Student View Elements
         const studentViewBtn = document.getElementById('student-view-btn');
@@ -692,9 +690,20 @@
             }, 5000); // Clear message after 5 seconds
         }
 
+        function showFirebaseError(message) {
+            firebaseErrorDisplay.innerHTML = `<p class="font-bold text-red-700">${message}</p>`;
+            firebaseErrorDisplay.classList.remove('hidden');
+            firebaseErrorDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         // --- Firebase Setup and Authentication ---
         async function setupFirebase() {
             try {
+                // Ensure firebaseConfig is not empty or invalid
+                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    throw new Error("Firebase configuration is missing or incomplete. Please ensure __firebase_config is provided.");
+                }
+
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -705,6 +714,7 @@
                         authStatusElement.innerHTML = `<p class="text-green-700 font-semibold">Authenticated as: <span class="font-bold">${userId}</span></p>`;
                         isAuthReady = true;
                         console.log("Firebase authenticated. User ID:", userId);
+                        firebaseErrorDisplay.classList.add('hidden'); // Hide error if auth succeeds
                         // Load essays for instructor view if it's the default view
                         if (!studentViewDiv.classList.contains('hidden')) { // Check if student view is active, otherwise instructor view is the default
                              // Do nothing, student view is default
@@ -718,7 +728,7 @@
                                 await signInWithCustomToken(auth, initialAuthToken);
                             } catch (error) {
                                 console.error("Error signing in with custom token:", error);
-                                showMessage("Authentication failed. Signing in anonymously.", "error");
+                                showFirebaseError(`Authentication failed: ${error.message}. Signing in anonymously.`);
                                 await signInAnonymously(auth);
                             }
                         } else {
@@ -729,7 +739,7 @@
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
                 authStatusElement.innerHTML = `<p class="text-red-600 font-semibold">Error initializing Firebase. Check console.</p>`;
-                showMessage("Failed to initialize the application. Please try again later.", "error");
+                showFirebaseError(`Failed to initialize the application: ${error.message}. Please try again later.`);
             }
         }
 
@@ -817,7 +827,7 @@
             if (timeElapsed >= 1) {
                 const currentContentLength = essayContentElement.textContent.length;
                 const charsTyped = currentContentLength - lastCharCountForSpeed;
-                const wordsTyped = charsTyped / 5;
+                const wordsTyped = currentContentLength / 5; // Simplified word count
                 const wpm = wordsTyped / (timeElapsed / 60);
 
                 typingSpeedElement.textContent = Math.round(wpm);
@@ -924,7 +934,7 @@
             }
 
             const totalEssayDuration = auditData.events.length > 0 ? auditData.events[auditData.events.length - 1].timestamp - auditData.events[0].timestamp : 0;
-            const essayWordCount = auditData.events.length > 0 ? auditData.events[auditData.events.length - 1].textContentLength : 0;
+            const essayWordCount = essayContentElement.textContent.split(/\s+/).filter(word => word.length > 0).length; // Calculate from current content
             const minutesTaken = totalEssayDuration / (1000 * 60);
 
             if (essayWordCount > 500 && minutesTaken < 10) {
@@ -962,15 +972,17 @@
             const aiDetection = runAIDetectionSimulation(auditLog);
 
             try {
+                // Use the correct user ID for the document path
                 const userDocRef = doc(collection(db, `artifacts/${appId}/users/${userId}/essays`));
 
                 await setDoc(userDocRef, {
                     essayContent: essayContent,
-                    auditLog: JSON.parse(JSON.stringify(auditLog)),
+                    auditLog: JSON.parse(JSON.stringify(auditLog)), // Deep copy to avoid reference issues
                     submittedAt: serverTimestamp(),
                     wordCount: essayContentElement.textContent.split(/\s+/).filter(word => word.length > 0).length,
                     aiDetectionScore: aiDetection.score,
-                    aiDetectionExplanations: aiDetection.explanations
+                    aiDetectionExplanations: aiDetection.explanations,
+                    userId: userId // Store userId in the document for easier lookup
                 });
 
                 showMessage("Essay and audit data saved successfully!", "success");
@@ -996,6 +1008,7 @@
                     `;
                 }
 
+                // Reset audit log and UI for new essay
                 auditLog = {
                     events: [],
                     typingSessions: [],
@@ -1040,7 +1053,9 @@
                 console.log(`Attempting to load essays from: ${collectionPath}`);
                 console.log(`Current authenticated user UID: ${auth.currentUser.uid}`);
 
-                const q = query(collection(db, collectionPath), orderBy("submittedAt", "desc"));
+                // IMPORTANT: Removed orderBy("submittedAt", "desc") to avoid potential index issues
+                // If sorting is critical, you would need to add a Firestore index or sort client-side.
+                const q = query(collection(db, collectionPath));
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
@@ -1048,14 +1063,27 @@
                     return;
                 }
 
-                essayListElement.innerHTML = '';
+                // Sort client-side if orderBy is removed from query
+                const essays = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (!data) {
+                    if (data) {
+                        essays.push({ id: doc.id, ...data });
+                    } else {
                         console.warn(`Skipping document ${doc.id} with no data.`);
-                        return;
                     }
+                });
 
+                // Client-side sorting by submittedAt (descending)
+                essays.sort((a, b) => {
+                    const dateA = a.submittedAt ? a.submittedAt.toDate().getTime() : 0;
+                    const dateB = b.submittedAt ? b.submittedAt.toDate().getTime() : 0;
+                    return dateB - dateA;
+                });
+
+
+                essayListElement.innerHTML = '';
+                essays.forEach((data) => {
                     const listItem = document.createElement('li');
                     listItem.className = 'p-3 bg-white rounded-md shadow-sm cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out';
                     
@@ -1065,12 +1093,12 @@
                     const aiScoreClass = aiScoreDisplay > 50 ? 'text-red-600' : 'text-green-600';
 
                     listItem.innerHTML = `
-                        <p class="font-semibold text-gray-800">Essay ID: ${doc.id.substring(0, 8)}...</p>
+                        <p class="font-semibold text-gray-800">Essay ID: ${data.id.substring(0, 8)}...</p>
                         <p class="text-sm text-gray-600">Student: ${studentIdDisplay}</p>
                         <p class="text-sm text-gray-600">Submitted: ${submittedAtDisplay}</p>
                         <p class="text-sm text-gray-600">AI Score: <span class="font-bold ${aiScoreClass}">${aiScoreDisplay}%</span></p>
                     `;
-                    listItem.addEventListener('click', () => displayEssayDetails(doc.id, data));
+                    listItem.addEventListener('click', () => displayEssayDetails(data.id, data));
                     essayListElement.appendChild(listItem);
                 });
             } catch (error) {
@@ -1370,11 +1398,11 @@
             if (isOverlay) {
                 overlayEssayDisplay.classList.remove('hidden');
                 overlayReplayContent.classList.add('hidden');
-                removeHighlightFromOverlayEditLog(); // Corrected call
+                removeHighlightFromEditLog(overlayEditLog); // Corrected call
             } else {
                 instructorEssayDisplayElement.classList.remove('hidden');
                 replayContentElement.classList.add('hidden');
-                removeHighlightFromEditLog();
+                removeHighlightFromEditLog(editLogElement); // Corrected call
             }
         }
 
@@ -1468,12 +1496,28 @@
             }
         }
 
-        function removeHighlightFromEditLog(targetEditLogElement) { // Accept targetEditLogElement
-            const activeItem = targetEditLogElement.querySelector('.edit-log-item.active');
-            if (activeItem) {
-                activeItem.classList.remove('active');
+        function highlightOverlayEditLogItem(index) {
+            removeHighlightFromEditLog(overlayEditLog); // Pass the overlayEditLog element
+            const logItems = overlayEditLog.children;
+            for (let i = 0; i < logItems.length; i++) {
+                if (parseInt(logItems[i].dataset.index) === index) {
+                    logItems[i].classList.add('active');
+                    logItems[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    break;
+                }
             }
         }
+
+        function removeHighlightFromEditLog(targetEditLogElement) { // Accept targetEditLogElement
+            // Check if targetEditLogElement is defined before trying to use querySelector
+            if (targetEditLogElement) {
+                const activeItem = targetEditLogElement.querySelector('.edit-log-item.active');
+                if (activeItem) {
+                    activeItem.classList.remove('active');
+                }
+            }
+        }
+
 
         // --- Update Formatting Bar State ---
         function updateFormatBarState() {
@@ -1570,7 +1614,10 @@
             instructorViewBtn.classList.remove('active');
             essayDetailContentDiv.classList.add('hidden');
             selectedEssayTitleElement.textContent = "Select an Essay to View Details";
-            stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
+            // Ensure editLogElement is available before calling stopReplay
+            if (editLogElement) {
+                stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
+            }
         }
 
         async function showInstructorView() {
@@ -1788,9 +1835,9 @@
 
         overlayPlaybackSpeedSelect.addEventListener('change', (event) => {
             replaySpeed = parseInt(event.target.value);
-            if (overlayReplayIntervalId) { // Check if overlay replay is active
-                clearTimeout(overlayReplayTimeoutId);
-                overlayReplayIntervalId = null;
+            if (replayIntervalId) { // Check if overlay replay is active (using replayIntervalId for both main and overlay)
+                clearTimeout(replayTimeoutId);
+                replayIntervalId = null;
                 startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
             }
         });
