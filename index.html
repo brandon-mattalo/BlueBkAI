@@ -4,359 +4,268 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlueBook Writing Platform</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg-color: #1a1a2e;
+            --primary-color: #16213e;
+            --secondary-color: #0f3460;
+            --accent-color: #e94560;
+            --text-color: #dcdcdc;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray background */
-            color: #334155; /* Darker text */
+            font-family: 'Lexend', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
         }
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: #ffffff;
+
+        .glass-ui {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
             border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
         }
 
-        /* Calmly Writer Style for Student View */
-        #student-view.calmly-writer-mode {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh; /* Full viewport height */
-            padding: 2rem 1rem; /* Adjust padding */
-            background-color: #f8fafc; /* Lighter background for focus */
-        }
-        #student-view.calmly-writer-mode > .format-buttons {
-            position: sticky; /* Stays at top when scrolling */
-            top: 0;
-            z-index: 10;
-            width: 100%;
-            max-width: 700px; /* Constrain toolbar width */
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
-        }
-        #student-view.calmly-writer-mode > .mb-6 { /* Contains essay-content */
-            width: 100%;
-            max-width: 700px; /* Constrain essay width */
-            flex-grow: 1; /* Allows essay area to expand */
-            margin-bottom: 2rem; /* Space before submit button */
-        }
-        #student-view.calmly-writer-mode #essay-content[contenteditable="true"] {
-            font-size: 1.125rem; /* Larger default font */
-            line-height: 1.8; /* More relaxed line height */
-            padding: 2.5rem; /* More internal padding */
-            border: none; /* No border for cleaner look */
-            box-shadow: none; /* No shadow */
-            background-color: transparent; /* Transparent background */
-        }
-        #student-view.calmly-writer-mode #essay-content[contenteditable="true"]:focus {
-            outline: none;
-            box-shadow: none;
-            border-color: transparent;
-        }
-        #student-view.calmly-writer-mode .info-box,
-        #student-view.calmly-writer-mode #ai-detection-result {
-            max-width: 700px; /* Constrain audit section width */
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        #student-view.calmly-writer-mode .container {
-            box-shadow: none; /* Remove container shadow in this mode */
-            background-color: transparent;
-            padding: 0;
-            margin: 0;
+        .glass-ui:hover {
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.57);
+            transform: translateY(-5px);
         }
 
-
-        /* General Styles */
         #essay-content[contenteditable="true"] {
-            min-height: 300px;
-            border: 1px solid #cbd5e0;
-            padding: 1rem;
-            background-color: #f8fafc;
-            border-radius: 0.5rem;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.6;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+            font-family: 'Roboto Mono', monospace;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            min-height: 70vh;
+            padding: 2rem;
+            border-radius: 1rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            overflow-y: scroll;
+            scroll-behavior: smooth;
         }
+
         #essay-content[contenteditable="true"]:focus {
             outline: none;
-            border-color: #38b2ac;
-            box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.4);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.4);
+        }
+        
+        .format-buttons {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            overflow-x: auto;
         }
 
-        .info-box {
-            background-color: #e0f2fe; /* Light blue */
-            border-left: 4px solid #38b2ac; /* Teal border */
-            padding: 1rem;
+        .format-buttons button, .format-buttons select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 0.5rem;
             border-radius: 0.5rem;
-            margin-top: 1rem;
-        }
-        .ai-alert {
-            background-color: #fee2e2; /* Light red */
-            border-left: 4px solid #ef4444; /* Red border */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            font-weight: 600;
-        }
-        .success-message {
-            background-color: #d1fae5; /* Light green */
-            border-left: 4px solid #10b981; /* Green border */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            font-weight: 600;
-        }
-        .loading-indicator {
-            display: flex;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            color: #64748b;
-            font-weight: 500;
         }
-        .spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #38b2ac; /* Blue */
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+
+        .format-buttons button svg {
+            width: 1.25rem;
+            height: 1.25rem;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .format-buttons button:hover, .format-buttons select:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
         }
+
+        .format-buttons button.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
         .view-switcher button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: 600;
             transition: all 0.2s ease-in-out;
             cursor: pointer;
-        }
-        .view-switcher button.active {
-            background-color: #38b2ac;
-            color: white;
-            box-shadow: 0 4px 10px rgba(56, 178, 172, 0.3);
-        }
-        .view-switcher button:not(.active) {
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
-        .view-switcher button:not(.active):hover {
-            background-color: #cbd5e0;
-        }
-        .replay-content, .final-essay-content {
-            border: 1px solid #cbd5e0;
-            padding: 1rem;
-            min-height: 200px;
-            background-color: #f8fafc;
-            border-radius: 0.5rem;
-            overflow-y: auto;
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
-            word-wrap: break-word; /* Break long words */
-            flex-grow: 1; /* Allow it to take available space */
-        }
-        .paste-highlight {
-            background-color: #fcd34d; /* Yellow-300 */
-            transition: background-color 0.5s ease-out;
-        }
-        .replay-controls button {
-            background-color: #4c51bf;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .replay-controls button:hover {
-            background-color: #5a62c9;
-        }
-        .replay-controls button:disabled {
-            background-color: #a0aec0;
-            cursor: not-allowed;
-        }
-        .edit-log-sidebar {
-            width: 280px; /* Fixed width for the sidebar */
-            min-width: 280px;
-            max-height: 600px; /* Limit height to prevent overflow */
-            overflow-y: auto;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-        }
-        .edit-log-item {
-            padding: 0.5rem;
-            margin-bottom: 0.25rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            transition: background-color 0.15s ease-in-out;
-            position: relative; /* For annotation positioning */
-        }
-        .edit-log-item:hover {
-            background-color: #edf2f7;
-        }
-        .edit-log-item.active {
-            background-color: #bee3f8; /* Light blue highlight for active item */
-            font-weight: bold;
-        }
-        .format-buttons {
-            background-color: #e2e8f0; /* Light gray background for the toolbar */
-            padding: 0.75rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem; /* Spacing between buttons/selects */
-            align-items: center;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
-        }
-        .format-buttons button, .format-buttons select {
-            background-color: #cbd5e0; /* Slightly darker gray for controls */
-            color: #2d3748; /* Dark text */
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
-            border: 1px solid #a0aec0; /* Subtle border */
-            cursor: pointer;
-            min-width: 40px; /* Ensure buttons have a minimum width */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .format-buttons button:hover, .format-buttons select:hover {
-            background-color: #a0aec0; /* Darker on hover */
-            transform: translateY(-1px); /* Slight lift effect */
-        }
-        .format-buttons button.active {
-            background-color: #38b2ac; /* Teal for active state */
-            color: white;
-            box-shadow: 0 2px 5px rgba(56, 178, 172, 0.4);
-            border-color: #38b2ac;
-        }
-        .format-buttons select {
-            padding-right: 2rem; /* Make space for dropdown arrow */
-            -webkit-appearance: none; /* Remove default arrow */
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1.25em;
-            color: #2d3748; /* Dark text for select */
-        }
-        .paste-annotation {
-            position: absolute;
-            top: 0.25rem;
-            right: 0.25rem;
-            background-color: #fcd34d;
-            color: #78350f;
-            font-size: 0.7rem;
-            padding: 0.1rem 0.3rem;
-            border-radius: 0.25rem;
-            font-weight: bold;
-            pointer-events: none; /* Allow clicks to pass through */
-            opacity: 0; /* Hidden by default */
-            transition: opacity 0.3s ease-in-out;
-        }
-        .paste-highlight-wrapper {
-            position: relative;
-            display: inline-block; /* To contain the absolute annotation */
-        }
-        .paste-highlight-wrapper .paste-annotation.show {
-            opacity: 1;
+            border: 1px solid var(--glass-border);
         }
 
-        /* Maximize View Styles */
-        .maximized-view-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #ffffff; /* Solid background when maximized */
-            z-index: 1000; /* Ensure it's on top */
-            display: flex;
-            flex-direction: column;
-            padding: 2rem;
-            box-shadow: none; /* Remove shadow when maximized */
-            border-radius: 0; /* Remove border-radius when maximized */
-        }
-        .maximized-view-overlay .close-maximize-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: #ef4444; /* Red for close */
+        .view-switcher button.active {
+            background-color: var(--accent-color);
             color: white;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 1001; /* Ensure button is above content */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3);
         }
-        .maximized-view-overlay .close-maximize-btn:hover {
-            background-color: #dc2626;
+
+        .view-switcher button:not(.active) {
+            background-color: var(--glass-bg);
+            color: var(--text-color);
         }
-        .maximized-view-overlay .essay-content-and-log {
-            flex-grow: 1;
-            display: flex;
-            gap: 1.5rem;
-            overflow: hidden; /* Prevent inner scrollbars from affecting outer layout */
+
+        .view-switcher button:not(.active):hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
-        .maximized-view-overlay #overlay-essay-display,
-        .maximized-view-overlay #overlay-replay-content {
-            height: 100%; /* Take full height of flex container */
-            min-height: unset; /* Override fixed min-height */
-            flex-grow: 1; /* Allow content to grow */
-        }
-        .maximized-view-overlay #overlay-edit-log {
-            height: 100%; /* Take full full height of flex container */
-            min-height: unset; /* Override fixed min-height */
-            max-height: unset; /* Override max-height */
-        }
-        .maximize-btn {
-            /* Now part of replay-controls flex, so no absolute positioning needed here */
-            background-color: #a0aec0;
-            color: white;
+
+        .ai-alert, .success-message {
+            padding: 1rem;
             border-radius: 0.5rem;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-left: 0.5rem; /* Add some space from speed selector */
+            margin-top: 1rem;
+            border-left: 4px solid;
         }
-        .maximize-btn:hover {
-            background-color: #718096;
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+
+        .ai-alert {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+        }
+
+        .success-message {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-color: #198754;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Light Mode Styles */
+        .light-mode {
+            --bg-color: #eef1f5;
+            --primary-color: #ffffff;
+            --secondary-color: #e9ecef;
+            --accent-color: #007bff;
+            --text-color: #212529;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.8);
+        }
+
+        .light-mode body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            background: linear-gradient(to bottom right, #e6e9f0 0%, #eef1f5 100%);
+        }
+
+        .light-mode .glass-ui {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode #essay-content[contenteditable="true"] {
+            background: rgba(255, 255, 255, 0.75);
+            border-color: var(--glass-border);
+            color: var(--text-color);
+        }
+
+        .light-mode #essay-content[contenteditable="true"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .light-mode .format-buttons button, .light-mode .format-buttons select {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+            color: var(--text-color);
+        }
+
+        .light-mode .format-buttons button:hover, .light-mode .format-buttons select:hover {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: var(--accent-color);
+        }
+
+        .light-mode .format-buttons button.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .light-mode .view-switcher button.active {
+            background-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        }
+
+        .light-mode .view-switcher button:not(.active) {
+            background-color: var(--glass-bg);
+            color: var(--text-color);
+        }
+
+        .light-mode .info-box {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .light-mode .text-gray-200 { color: #495057; }
+        .light-mode .text-gray-300 { color: #6c757d; }
+        .light-mode .text-gray-400 { color: #6c757d; } /* Darkened for better readability */
+        .light-mode .font-bold { color: var(--accent-color); }
+
+        .light-mode #submit-essay {
+            background-color: var(--accent-color);
+            color: #ffffff; /* Fix for readable text */
+        }
+
+        .light-mode .spinner {
+            border-top-color: var(--accent-color);
         }
     </style>
 </head>
 <body class="p-4">
-    <div class="container">
-        <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">BlueBook Writing Platform</h1>
-        <p class="text-center text-gray-600 mb-8">Your secure environment for authentic writing. All activity is audited to ensure academic integrity.</p>
+    <div class="container mx-auto px-4 relative">
+        <div class="absolute top-4 right-4">
+            <label for="theme-toggle" class="flex items-center cursor-pointer">
+                <div class="relative">
+                    <input type="checkbox" id="theme-toggle" class="sr-only">
+                    <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition flex items-center justify-center">
+                        <svg id="sun-icon" class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="moon-icon" class="w-4 h-4 text-gray-800 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </div>
+                </div>
+            </label>
+        </div>
+        <h1 class="text-4xl font-bold text-center text-gray-200 mb-6">BlueBook Writing Platform</h1>
+        <p class="text-center text-gray-400 mb-8">Your secure environment for authentic writing. All activity is audited to ensure academic integrity.</p>
 
         <div class="view-switcher flex justify-center space-x-4 mb-8">
             <button id="student-view-btn" class="active">Student View</button>
             <button id="instructor-view-btn">Instructor View</button>
         </div>
 
-        <div id="auth-status" class="text-center mb-4 text-gray-700">
+        <div id="auth-status" class="text-center mb-4 text-gray-300">
             <div class="loading-indicator">
                 <div class="spinner"></div>
                 Initializing application...
@@ -366,82 +275,96 @@
         <div id="firebase-error-display" class="hidden ai-alert text-center"></div>
 
         <!-- Student View -->
-        <div id="student-view" class="calmly-writer-mode">
-            <div class="mb-4 format-buttons">
-                <button id="bold-btn"><b>B</b></button>
-                <button id="italic-btn"><i>I</i></button>
-                <button id="underline-btn"><u>U</u></button>
-                <button id="ul-btn">UL</button>
-                <button id="ol-btn">OL</button>
+        <div id="student-view" class="flex flex-row gap-6">
+            <!-- Main Content -->
+            <div class="flex-grow flex flex-col gap-4 glass-ui p-6">
+                <div class="format-buttons glass-ui p-2 -m-2 mb-4">
+                    <button id="bold-btn" title="Bold"><b>B</b></button>
+                    <button id="italic-btn" title="Italic"><i>I</i></button>
+                    <button id="underline-btn" title="Underline"><u>U</u></button>
+                    <button id="ul-btn" title="Unordered List">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <button id="ol-btn" title="Ordered List">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
 
-                <select id="font-family-select">
-                    <option value="Inter, sans-serif">Inter</option>
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="Times New Roman, serif">Times New Roman</option>
-                    <option value="Courier New, monospace">Courier New</option>
-                    <option value="Georgia, serif">Georgia</option>
-                    <option value="Verdana, sans-serif">Verdana</option>
-                </select>
+                    <select id="font-family-select">
+                        <option value="Inter, sans-serif">Inter</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Times New Roman, serif">Times New Roman</option>
+                        <option value="Courier New, monospace">Courier New</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                    </select>
 
-                <select id="font-size-select">
-                    <option value="1">Small</option>
-                    <option value="2">Medium</option>
-                    <option value="3" selected>Normal</option>
-                    <option value="4">Large</option>
-                    <option value="5">X-Large</option>
-                    <option value="6">XX-Large</option>
-                </select>
+                    <select id="font-size-select">
+                        <option value="1">Small</option>
+                        <option value="2">Medium</option>
+                        <option value="3" selected>Normal</option>
+                        <option value="4">Large</option>
+                        <option value="5">X-Large</option>
+                        <option value="6">XX-Large</option>
+                    </select>
 
-                <select id="header-select">
-                    <option value="p">Paragraph</option>
-                    <option value="h1">Header 1</option>
-                    <option value="h2">Header 2</option>
-                    <option value="h3">Header 3</option>
-                </select>
+                    <select id="header-select">
+                        <option value="p">Paragraph</option>
+                        <option value="h1">Header 1</option>
+                        <option value="h2">Header 2</option>
+                        <option value="h3">Header 3</option>
+                    </select>
 
-                <button id="justify-left-btn">Left</button>
-                <button id="justify-center-btn">Center</button>
-                <button id="justify-right-btn">Right</button>
-                <button id="justify-full-btn">Justify</button>
+                    <button id="justify-left-btn" title="Align Left"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 10h12M3 14h18M3 18h12"></path></svg></button>
+                    <button id="justify-center-btn" title="Align Center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M6 10h12M3 14h18M6 18h12"></path></svg></button>
+                    <button id="justify-right-btn" title="Align Right"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M9 10h12M3 14h18M9 18h12"></path></svg></button>
+                    <button id="justify-full-btn" title="Justify"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 10h18M3 14h18M3 18h18"></path></svg></button>
 
-                <button id="indent-btn">Indent</button>
-                <button id="blockquote-btn">Quote</button>
+                    <button id="decrease-indent-btn" title="Decrease Indent"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path></svg></button>
+                    <button id="increase-indent-btn" title="Increase Indent"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg></button>
+                    <button id="blockquote-btn" title="Quote" class="text-2xl font-serif">“</button>
 
-                <select id="line-height-select">
-                    <option value="1.0">Single</option>
-                    <option value="1.15">1.15</option>
-                    <option value="1.5">1.5 Lines</option>
-                    <option value="2.0">Double</option>
-                </select>
+                    <select id="line-height-select">
+                        <option value="1.0">Single</option>
+                        <option value="1.15">1.15</option>
+                        <option value="1.5">1.5 Lines</option>
+                        <option value="2.0">Double</option>
+                    </select>
+                </div>
+                <div class="flex-grow">
+                    <label for="essay-content" class="sr-only">Your Essay:</label>
+                    <div id="essay-content" contenteditable="true"
+                         class="w-full h-full p-4 border rounded-lg focus:ring-2 focus:border-transparent transition duration-200 ease-in-out shadow-sm"
+                         style="border-color: var(--glass-border); --tw-ring-color: var(--accent-color);"
+                         placeholder="Start writing your essay here..."></div>
+                </div>
+
+                <button id="submit-essay"
+                        class="w-full text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-75"
+                        style="background-color: var(--accent-color); --tw-ring-color: var(--accent-color);">
+                    Submit Essay
+                </button>
+
+                <div id="message-box" class="mt-4"></div>
             </div>
-            <div class="mb-6">
-                <label for="essay-content" class="block text-gray-700 text-lg font-semibold mb-2 sr-only">Your Essay:</label> <!-- sr-only to hide visually -->
-                <div id="essay-content" contenteditable="true"
-                     class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm"
-                     placeholder="Start writing your essay here..."></div>
-            </div>
-
-            <button id="submit-essay"
-                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-500 focus:ring-opacity-75">
-                Submit Essay
-            </button>
-
-            <div id="message-box" class="mt-4"></div>
-
-            <div class="mt-8 p-6 bg-gray-50 rounded-lg shadow-inner">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Writing Process Audit:</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Sidebar -->
+            <div class="w-96 flex-shrink-0 p-6 rounded-lg shadow-inner glass-ui flex flex-col gap-4">
+                <h2 class="text-2xl font-semibold text-gray-300 mb-2">Writing Process Audit:</h2>
+                <div class="grid grid-cols-1 gap-4">
                     <div class="info-box">
-                        <p class="font-medium text-gray-800">Keystrokes: <span id="keystroke-count" class="font-bold text-teal-700">0</span></p>
+                        <p class="font-medium text-gray-200">Keystrokes: <span id="keystroke-count" class="font-bold" style="color: var(--accent-color);">0</span></p>
                     </div>
                     <div class="info-box">
-                        <p class="font-medium text-gray-800">Typing Speed (WPM): <span id="typing-speed" class="font-bold text-teal-700">0</span></p>
+                        <p class="font-medium text-gray-200">Typing Speed (WPM): <span id="typing-speed" class="font-bold" style="color: var(--accent-color);">0</span></p>
                     </div>
                     <div class="info-box">
-                        <p class="font-medium text-gray-800">Tab Switches: <span id="tab-switch-count" class="font-bold text-teal-700">0</span></p>
+                        <p class="font-medium text-gray-200">Tab Switches: <span id="tab-switch-count" class="font-bold" style="color: var(--accent-color);">0</span></p>
                     </div>
                     <div class="info-box">
-                        <p class="font-medium text-gray-800">Paste Events: <span id="paste-count" class="font-bold text-teal-700">0</span></p>
+                        <p class="font-medium text-gray-200">Paste Events: <span id="paste-count" class="font-bold" style="color: var(--accent-color);">0</span></p>
                     </div>
                 </div>
                 <div id="ai-detection-result" class="mt-4">
@@ -451,46 +374,46 @@
         </div>
 
         <!-- Instructor View -->
-        <div id="instructor-view" class="hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Instructor Dashboard</h2>
+        <div id="instructor-view" class="hidden glass-ui p-6">
+            <h2 class="text-3xl font-bold text-gray-200 mb-6">Instructor Dashboard</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Essay List -->
-                <div class="md:col-span-1 bg-gray-50 p-4 rounded-lg shadow-inner">
-                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Submitted Essays:</h3>
+                <div class="md:col-span-1 p-4 rounded-lg shadow-inner glass-ui">
+                    <h3 class="text-xl font-semibold text-gray-300 mb-4">Submitted Essays:</h3>
                     <ul id="essay-list" class="space-y-2">
                         <li class="text-gray-500">No essays submitted yet.</li>
                     </ul>
                 </div>
 
                 <!-- Essay Detail & Replay -->
-                <div id="essay-detail-pane" class="md:col-span-2 bg-white p-6 rounded-lg shadow-lg relative">
-                    <h3 id="selected-essay-title" class="text-2xl font-bold text-gray-800 mb-4">Select an Essay to View Details</h3>
+                <div id="essay-detail-pane" class="md:col-span-2 p-6 rounded-lg shadow-lg relative glass-ui">
+                    <h3 id="selected-essay-title" class="text-2xl font-bold text-gray-200 mb-4">Select an Essay to View Details</h3>
                     <div id="essay-detail-content" class="hidden">
-                        <p class="text-gray-600 mb-4"><strong>Student ID:</strong> <span id="detail-student-id"></span></p>
-                        <p class="text-gray-600 mb-4"><strong>Submitted At:</strong> <span id="detail-submitted-at"></span></p>
-                        <p class="text-gray-600 mb-4"><strong>Word Count:</strong> <span id="detail-word-count"></span></p>
+                        <p class="text-gray-400 mb-4"><strong>Student ID:</strong> <span id="detail-student-id"></span></p>
+                        <p class="text-gray-400 mb-4"><strong>Submitted At:</strong> <span id="detail-submitted-at"></span></p>
+                        <p class="text-gray-400 mb-4"><strong>Word Count:</strong> <span id="detail-word-count"></span></p>
 
-                        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <h4 class="text-xl font-semibold text-blue-800 mb-2">Simulated AI Detection Score: <span id="detail-ai-score" class="text-blue-900">N/A</span></h4>
-                            <div id="detail-ai-explanation" class="text-blue-700 text-sm"></div>
+                        <div class="mt-6 p-4 rounded-lg border glass-ui">
+                            <h4 class="text-xl font-semibold text-blue-300 mb-2">Simulated AI Detection Score: <span id="detail-ai-score" class="text-blue-200">N/A</span></h4>
+                            <div id="detail-ai-explanation" class="text-blue-400 text-sm"></div>
                         </div>
 
-                        <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Audit Statistics:</h4>
+                        <h4 class="text-xl font-semibold text-gray-300 mt-6 mb-2">Audit Statistics:</h4>
                         <div class="grid grid-cols-2 gap-4 mb-6">
-                            <div class="info-box">Keystrokes: <span id="detail-keystrokes" class="font-bold text-teal-700"></span></div>
-                            <div class="info-box">Avg. Typing Speed (WPM): <span id="detail-avg-typing-speed" class="font-bold text-teal-700"></span></div>
-                            <div class="info-box">Tab Switches: <span id="detail-tab-switches" class="font-bold text-teal-700"></span></div>
-                            <div class="info-box">Paste Events: <span id="detail-paste-events" class="font-bold text-teal-700"></span></div>
+                            <div class="info-box glass-ui">Keystrokes: <span id="detail-keystrokes" class="font-bold text-teal-400"></span></div>
+                            <div class="info-box glass-ui">Avg. Typing Speed (WPM): <span id="detail-avg-typing-speed" class="font-bold text-teal-400"></span></div>
+                            <div class="info-box glass-ui">Tab Switches: <span id="detail-tab-switches" class="font-bold text-teal-400"></span></div>
+                            <div class="info-box glass-ui">Paste Events: <span id="detail-paste-events" class="font-bold text-teal-400"></span></div>
                         </div>
 
-                        <h4 class="text-xl font-semibold text-gray-700 mt-6 mb-2">Writing Process Replay & Edit Log:</h4>
+                        <h4 class="text-xl font-semibold text-gray-300 mt-6 mb-2">Writing Process Replay & Edit Log:</h4>
                         <div class="replay-controls flex items-center space-x-4 mb-4">
                             <button id="play-replay-btn">Play Replay</button>
                             <button id="stop-replay-btn" disabled>Stop</button>
                             <input type="range" id="replay-scrub" min="0" max="100" value="0" class="flex-grow">
                             <span id="replay-time">0:00 / 0:00</span>
-                            <select id="playback-speed-select" class="px-2 py-1 rounded-lg text-sm bg-gray-200 text-gray-700">
+                            <select id="playback-speed-select" class="px-2 py-1 rounded-lg text-sm glass-ui">
                                 <option value="1">1x</option>
                                 <option value="2">2x</option>
                                 <option value="5" selected>5x</option>
@@ -499,24 +422,24 @@
                             <button id="maximize-btn" class="maximize-btn"> [ ] </button> <!-- Moved maximize button -->
                         </div>
 
-                        <div class="flex space-x-4 essay-content-and-log">
+                        <div class="flex space-x-4">
                             <!-- Main Essay Content / Replay Area -->
-                            <div id="instructor-essay-display" class="final-essay-content">
+                            <div id="instructor-essay-display" class="flex-grow final-essay-content glass-ui p-4">
                                 <!-- Final essay content will be displayed here initially -->
                             </div>
-                            <div id="replay-content" class="replay-content hidden">
+                            <div id="replay-content" class="flex-grow replay-content hidden glass-ui p-4">
                                 <!-- Replay content will be displayed here during replay -->
                             </div>
 
                             <!-- Edit Log Sidebar -->
-                            <div class="edit-log-sidebar">
-                                <h5 class="text-lg font-medium text-gray-700 mb-2">Event Log:</h5>
-                                <div id="edit-log" class="text-sm text-gray-700">
+                            <div class="w-1/3 edit-log-sidebar glass-ui p-4">
+                                <h5 class="text-lg font-medium text-gray-300 mb-2">Event Log:</h5>
+                                <div id="edit-log" class="text-sm text-gray-300">
                                     No edits logged.
                                 </div>
                             </div>
                         </div>
-                        <button id="download-docx-btn" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">Download as .docx</button>
+                        <button id="download-docx-btn" class="mt-6 bg-accent-color hover:bg-accent-dark text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">Download as .docx</button>
                     </div>
                 </div>
             </div>
@@ -524,8 +447,8 @@
     </div>
 
     <!-- Maximize Overlay Container (hidden by default) -->
-    <div id="maximize-overlay" class="hidden maximized-view-overlay">
-        <button id="close-maximize-overlay-btn" class="close-maximize-btn">X</button>
+    <div id="maximize-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 z-50 p-8 flex flex-col">
+        <button id="close-maximize-overlay-btn" class="absolute top-4 right-4 text-white text-2xl font-bold">&times;</button>
         <!-- Cloned replay controls for overlay -->
         <div class="replay-controls flex items-center space-x-4 mb-4">
             <button id="overlay-play-replay-btn">Play Replay</button>
@@ -539,10 +462,10 @@
                 <option value="10">10x</option>
             </select>
         </div>
-        <div class="flex space-x-4 essay-content-and-log">
-            <div id="overlay-essay-display" class="final-essay-content"></div>
-            <div id="overlay-replay-content" class="replay-content hidden"></div>
-            <div id="overlay-edit-log" class="edit-log-sidebar"></div>
+        <div class="flex-grow flex space-x-4">
+            <div id="overlay-essay-display" class="flex-grow final-essay-content glass-ui p-4"></div>
+            <div id="overlay-replay-content" class="flex-grow replay-content hidden glass-ui p-4"></div>
+            <div id="overlay-edit-log" class="w-1/3 edit-log-sidebar glass-ui p-4"></div>
         </div>
     </div>
 
@@ -607,7 +530,8 @@
         const justifyCenterBtn = document.getElementById('justify-center-btn');
         const justifyRightBtn = document.getElementById('justify-right-btn');
         const justifyFullBtn = document.getElementById('justify-full-btn');
-        const indentBtn = document.getElementById('indent-btn');
+        const increaseIndentBtn = document.getElementById('increase-indent-btn');
+        const decreaseIndentBtn = document.getElementById('decrease-indent-btn');
         const blockquoteBtn = document.getElementById('blockquote-btn');
         const lineHeightSelect = document.getElementById('line-height-select');
 
@@ -674,6 +598,9 @@
         let replayStartTime = 0; // Timestamp when replay starts
         let replaySpeed = parseInt(playbackSpeedSelect.value); // Get initial speed from selector
         let replayTimeoutId = null; // To store the timeout for the next replay event
+        let replayAnimationId = null; // For the requestAnimationFrame loop
+        let replayStartTimestamp = 0; // The Date.now() when replay starts/resumes
+        let replayStartOffset = 0; // The elapsed time (ms) when pausing
         let currentEssayDataForReplay = null; // Store the full essay data for replay
 
         // --- UI Message Functions ---
@@ -1085,18 +1012,18 @@
                 essayListElement.innerHTML = '';
                 essays.forEach((data) => {
                     const listItem = document.createElement('li');
-                    listItem.className = 'p-3 bg-white rounded-md shadow-sm cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out';
+                    listItem.className = 'p-3 rounded-md shadow-sm cursor-pointer hover:bg-gray-700 transition duration-150 ease-in-out glass-ui';
                     
                     const studentIdDisplay = data.userId ? data.userId.substring(0, 8) + '...' : 'N/A';
                     const submittedAtDisplay = data.submittedAt ? new Date(data.submittedAt.toDate()).toLocaleString() : 'N/A';
                     const aiScoreDisplay = typeof data.aiDetectionScore === 'number' ? data.aiDetectionScore : 'N/A';
-                    const aiScoreClass = aiScoreDisplay > 50 ? 'text-red-600' : 'text-green-600';
+                    const aiScoreClass = aiScoreDisplay > 50 ? 'text-red-400' : 'text-green-400';
 
                     listItem.innerHTML = `
-                        <p class="font-semibold text-gray-800">Essay ID: ${data.id.substring(0, 8)}...</p>
-                        <p class="text-sm text-gray-600">Student: ${studentIdDisplay}</p>
-                        <p class="text-sm text-gray-600">Submitted: ${submittedAtDisplay}</p>
-                        <p class="text-sm text-gray-600">AI Score: <span class="font-bold ${aiScoreClass}">${aiScoreDisplay}%</span></p>
+                        <p class="font-semibold text-gray-200">Essay ID: ${data.id.substring(0, 8)}...</p>
+                        <p class="text-sm text-gray-400">Student: ${studentIdDisplay}</p>
+                        <p class="text-sm text-gray-400">Submitted: ${submittedAtDisplay}</p>
+                        <p class="text-sm text-gray-400">AI Score: <span class="font-bold ${aiScoreClass}">${aiScoreDisplay}%</span></p>
                     `;
                     listItem.addEventListener('click', () => displayEssayDetails(data.id, data));
                     essayListElement.appendChild(listItem);
@@ -1240,17 +1167,35 @@
         }
 
         function updateReplayTimeDisplay(currentTimeMs, totalTimeMs) {
+            // This function now just updates the DOM, the logic is in updateReplayProgress
+            const formattedCurrent = formatTime(currentTimeMs);
+            const formattedTotal = formatTime(totalTimeMs);
+            const progressPercent = totalTimeMs > 0 ? (currentTimeMs / totalTimeMs) * 100 : 0;
+
             // Update main view controls
-            replayTimeElement.textContent = `${formatTime(currentTimeMs)} / ${formatTime(totalTimeMs)}`;
-            if (totalTimeMs > 0) {
-                replayScrubElement.value = (currentTimeMs / totalTimeMs) * 100;
-            }
+            replayTimeElement.textContent = `${formattedCurrent} / ${formattedTotal}`;
+            replayScrubElement.value = progressPercent;
+            
             // Update overlay controls
-            overlayReplayTime.textContent = `${formatTime(currentTimeMs)} / ${formatTime(totalTimeMs)}`;
-            if (totalTimeMs > 0) {
-                overlayReplayScrub.value = (currentTimeMs / totalTimeMs) * 100;
+            overlayReplayTime.textContent = `${formattedCurrent} / ${formattedTotal}`;
+            overlayReplayScrub.value = progressPercent;
+        }
+
+        function updateReplayProgress() {
+            const firstTimestamp = replayAuditLog[0]?.timestamp || 0;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1]?.timestamp || 0;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+
+            const elapsedTime = (Date.now() - replayStartTimestamp) * replaySpeed + replayStartOffset;
+            const clampedElapsedTime = Math.min(elapsedTime, totalReplayDuration);
+            
+            updateReplayTimeDisplay(clampedElapsedTime, totalReplayDuration);
+
+            if (clampedElapsedTime < totalReplayDuration) {
+                replayAnimationId = requestAnimationFrame(updateReplayProgress);
             }
         }
+
 
         function startReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
             if (replayIntervalId) return; // Only one replay can run at a time
@@ -1269,24 +1214,11 @@
                 replayContentElement.classList.remove('hidden');
             }
             
-            // Reconstruct content up to the current index (HTML for format/paste, plain text for keypress)
-            let currentReplayContent = "";
-            let currentReplayPlainTextContent = "";
-            for (let i = 0; i <= replayCurrentIndex && i < replayAuditLog.length; i++) {
-                const event = replayAuditLog[i];
-                if (event.type === 'keypress') {
-                    if (event.key === 'Backspace') {
-                        currentReplayPlainTextContent = currentReplayPlainTextContent.slice(0, -1);
-                    } else if (event.key === 'Enter') {
-                        currentReplayPlainTextContent += '\n';
-                    } else if (event.key.length === 1) {
-                        currentReplayPlainTextContent += event.key;
-                    }
-                    contentElement.textContent = currentReplayPlainTextContent;
-                } else if (event.type === 'paste' || event.type === 'format') {
-                    contentElement.innerHTML = event.htmlContent;
-                    currentReplayPlainTextContent = contentElement.textContent;
-                }
+            // Set the initial content state before starting the replay animation
+            if (replayCurrentIndex > 0 && replayCurrentIndex < replayAuditLog.length) {
+                contentElement.innerHTML = replayAuditLog[replayCurrentIndex - 1].htmlContent;
+            } else {
+                contentElement.innerHTML = "";
             }
             contentElement.scrollTop = contentElement.scrollHeight;
 
@@ -1296,16 +1228,10 @@
 
 
             const firstTimestamp = replayAuditLog[0].timestamp;
-            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1].timestamp;
-            const totalReplayDuration = lastTimestamp - firstTimestamp;
 
-            let initialDelay = 0;
-            if (replayCurrentIndex > 0) {
-                initialDelay = (replayAuditLog[replayCurrentIndex].timestamp - replayAuditLog[replayCurrentIndex - 1].timestamp) / replaySpeed;
-            }
-            initialDelay = Math.max(initialDelay, 5);
-
-            replayStartTime = Date.now() - (replayAuditLog[replayCurrentIndex]?.timestamp - firstTimestamp) / replaySpeed;
+            // Start the continuous timer
+            replayStartTimestamp = Date.now();
+            replayAnimationId = requestAnimationFrame(updateReplayProgress);
 
             const processNextEvent = () => {
                 if (replayCurrentIndex >= replayAuditLog.length) {
@@ -1315,46 +1241,14 @@
                 }
 
                 const event = replayAuditLog[replayCurrentIndex];
-                const currentReplayTime = (event.timestamp - firstTimestamp);
-                updateReplayTimeDisplay(currentReplayTime, totalReplayDuration);
+                
+                // Always update the content to the state after the current event
+                contentElement.innerHTML = event.htmlContent;
+                contentElement.scrollTop = contentElement.scrollHeight;
 
-                let delay = 0;
-                if (replayCurrentIndex > 0) {
-                    delay = (event.timestamp - replayAuditLog[replayCurrentIndex - 1].timestamp) / replaySpeed;
-                }
-                delay = Math.max(delay, 5);
-
-                if (event.type === 'keypress') {
-                    if (event.key === 'Backspace') {
-                        currentReplayPlainTextContent = currentReplayPlainTextContent.slice(0, -1);
-                    } else if (event.key === 'Enter') {
-                        currentReplayPlainTextContent += '\n';
-                    } else if (event.key.length === 1) {
-                        currentReplayPlainTextContent += event.key;
-                    }
-                    contentElement.textContent = currentReplayPlainTextContent;
-                    contentElement.scrollTop = contentElement.scrollHeight;
-                } else if (event.type === 'paste' || event.type === 'format') {
-                    contentElement.innerHTML = event.htmlContent;
-                    currentReplayPlainTextContent = contentElement.textContent;
-
-                    if (event.type === 'paste') {
-                        contentElement.classList.add('paste-highlight');
-                        const annotationSpan = document.createElement('span');
-                        annotationSpan.className = 'paste-annotation show';
-                        annotationSpan.textContent = 'Pasted!';
-                        contentElement.appendChild(annotationSpan);
-
-                        setTimeout(() => {
-                            contentElement.classList.remove('paste-highlight');
-                            if (annotationSpan.parentNode) {
-                                annotationSpan.parentNode.removeChild(annotationSpan);
-                            }
-                        }, 1000);
-                    }
-                    contentElement.scrollTop = contentElement.scrollHeight;
-                } else if (event.type === 'tabSwitch') {
-                    console.log(`Replay: Tab switch (${event.eventType}) at ${new Date(event.timestamp).toLocaleTimeString()}`);
+                if (event.type === 'paste') {
+                    contentElement.classList.add('paste-highlight');
+                    setTimeout(() => contentElement.classList.remove('paste-highlight'), 500);
                 }
 
                 // Highlight current event in the correct edit log
@@ -1365,21 +1259,47 @@
                 }
 
                 replayCurrentIndex++;
-                replayTimeoutId = setTimeout(processNextEvent, delay);
+
+                // Schedule the next event
+                if (replayCurrentIndex < replayAuditLog.length) {
+                    const nextEvent = replayAuditLog[replayCurrentIndex];
+                    const delay = (nextEvent.timestamp - event.timestamp) / replaySpeed;
+                    replayTimeoutId = setTimeout(processNextEvent, Math.max(delay, 5));
+                } else {
+                    // This was the last event, so stop
+                    stopReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay);
+                    showMessage("Replay finished!", "success");
+                }
             };
 
-            replayIntervalId = setTimeout(processNextEvent, initialDelay);
+            // Set initial delay for the first event to process
+            let initialDelay = 0;
+            if (replayCurrentIndex > 0 && replayCurrentIndex < replayAuditLog.length) {
+                initialDelay = (replayAuditLog[replayCurrentIndex].timestamp - replayAuditLog[replayCurrentIndex - 1].timestamp) / replaySpeed;
+            }
+            replayIntervalId = setTimeout(processNextEvent, Math.max(initialDelay, 5));
         }
 
         function pauseReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
             clearTimeout(replayTimeoutId);
+            cancelAnimationFrame(replayAnimationId); // Stop the animation loop
             replayIntervalId = null;
+            replayAnimationId = null;
+
+            // Calculate how far along we were and store it in the offset
+            const firstTimestamp = replayAuditLog[0]?.timestamp || 0;
+            const lastTimestamp = replayAuditLog[replayAuditLog.length - 1]?.timestamp || 0;
+            const totalReplayDuration = lastTimestamp - firstTimestamp;
+            const elapsedTime = (Date.now() - replayStartTimestamp) * replaySpeed + replayStartOffset;
+            replayStartOffset = Math.min(elapsedTime, totalReplayDuration);
+
             playBtn.disabled = false;
             stopBtn.disabled = false;
         }
 
         function stopReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay = false) {
             pauseReplay(contentElement, editLogElement, playBtn, stopBtn, scrubElement, timeElement, speedSelect, isOverlay);
+            replayStartOffset = 0; // Reset offset on full stop
             contentElement.innerHTML = '';
             // Make sure to reset replayPlainTextContent for the correct context
             if (isOverlay) {
@@ -1466,8 +1386,14 @@
             const firstTimestamp = replayAuditLog[0] ? replayAuditLog[0].timestamp : 0;
             const lastTimestamp = replayAuditLog[replayAuditLog.length - 1] ? replayAuditLog[replayAuditLog.length - 1].timestamp : 0;
             const totalReplayDuration = lastTimestamp - firstTimestamp;
-            const currentReplayTime = replayAuditLog[replayCurrentIndex] ? (replayAuditLog[replayCurrentIndex].timestamp - firstTimestamp) : 0;
-            updateReplayTimeDisplay(currentReplayTime, totalReplayDuration);
+            const currentEventTimestamp = replayAuditLog[replayCurrentIndex]?.timestamp || firstTimestamp;
+            const elapsedTime = currentEventTimestamp - firstTimestamp;
+            
+            // When jumping, we need to set the offset so the animation loop knows where to start from.
+            replayStartOffset = elapsedTime;
+
+            // Manually update the display once to reflect the jump immediately.
+            updateReplayTimeDisplay(elapsedTime, totalReplayDuration);
 
             // Highlight in the correct edit log
             if (isOverlay) {
@@ -1604,29 +1530,24 @@
 
         // --- View Switcher Logic ---
         function showStudentView() {
-            document.body.classList.remove('maximized-view-active');
-            document.querySelector('.container').classList.remove('maximized-view-active');
-            maximizeOverlay.classList.add('hidden'); // Ensure overlay is hidden
+            maximizeOverlay.classList.add('hidden');
 
-            studentViewDiv.style.display = 'flex'; // Explicitly show student view
-            instructorViewDiv.style.display = 'none'; // Explicitly hide instructor view
+            studentViewDiv.style.display = 'flex';
+            instructorViewDiv.style.display = 'none';
             studentViewBtn.classList.add('active');
             instructorViewBtn.classList.remove('active');
             essayDetailContentDiv.classList.add('hidden');
             selectedEssayTitleElement.textContent = "Select an Essay to View Details";
-            // Ensure editLogElement is available before calling stopReplay
             if (editLogElement) {
                 stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
             }
         }
 
         async function showInstructorView() {
-            document.body.classList.remove('maximized-view-active');
-            document.querySelector('.container').classList.remove('maximized-view-active');
-            maximizeOverlay.classList.add('hidden'); // Ensure overlay is hidden
+            maximizeOverlay.classList.add('hidden');
 
-            studentViewDiv.style.display = 'none'; // Explicitly hide student view
-            instructorViewDiv.style.display = 'block'; // Explicitly show instructor view
+            studentViewDiv.style.display = 'none';
+            instructorViewDiv.style.display = 'block';
             studentViewBtn.classList.remove('active');
             instructorViewBtn.classList.add('active');
             await loadSubmittedEssays();
@@ -1634,64 +1555,46 @@
 
         // --- Maximize/Minimize Instructor View ---
         function toggleMaximizeView() {
-            const isMaximized = maximizeOverlay.classList.toggle('hidden'); // Toggle visibility of the overlay
+            const isMaximized = maximizeOverlay.classList.toggle('hidden');
             
-            if (!isMaximized) { // If it's now visible (maximized)
-                // Clone content into the overlay
+            if (!isMaximized) {
                 overlayEssayDisplay.innerHTML = instructorEssayDisplayElement.innerHTML;
-                // Clear and repopulate overlayEditLog to ensure event listeners are attached
                 overlayEditLog.innerHTML = '';
                 const logItems = editLogElement.children;
                 for (let i = 0; i < logItems.length; i++) {
                     const clonedItem = logItems[i].cloneNode(true);
-                    // Re-attach event listener for the cloned item
                     const originalIndex = parseInt(logItems[i].dataset.index);
                     const originalTimestamp = parseInt(logItems[i].dataset.timestamp);
-                    // Pass overlay elements to jumpToReplayTime for clicks within the overlay log
                     clonedItem.addEventListener('click', () => jumpToReplayTime(originalTimestamp, originalIndex, overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true));
                     overlayEditLog.appendChild(clonedItem);
                 }
 
-
-                // Set initial visibility based on current state
-                if (instructorEssayDisplayElement.classList.contains('hidden')) { // If replay was active in main view
+                if (instructorEssayDisplayElement.classList.contains('hidden')) {
                     overlayEssayDisplay.classList.add('hidden');
                     overlayReplayContent.classList.remove('hidden');
-                    // If replay was running, start it in the overlay
                     if (replayIntervalId) {
-                        stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect); // Stop main replay
-                        startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true); // Start new replay in overlay
+                        stopReplay(replayContentElement, editLogElement, playReplayBtn, stopReplayBtn, replayScrubElement, replayTimeElement, playbackSpeedSelect);
+                        startReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
                     } else {
-                        // If replay was paused/stopped in main view, initialize overlay replay content to current state
                         overlayReplayContent.innerHTML = replayContentElement.innerHTML;
                     }
-                } else { // If final essay was active in main view
+                } else {
                     overlayEssayDisplay.classList.remove('hidden');
                     overlayReplayContent.classList.add('hidden');
                 }
-
-                // Hide the main instructor view content when overlay is active
                 essayDetailContentDiv.classList.add('hidden');
-
-            } else { // If it's now hidden (minimized)
-                // Stop any replay running in the overlay
+            } else {
                 stopReplay(overlayReplayContent, overlayEditLog, overlayPlayReplayBtn, overlayStopReplayBtn, overlayReplayScrub, overlayReplayTime, overlayPlaybackSpeedSelect, true);
-                // Restore main instructor view content
                 essayDetailContentDiv.classList.remove('hidden');
-                // Ensure the correct display is shown in the main view after minimizing
-                if (replayIntervalId) { // If replay was running when maximized
+                if (replayIntervalId) {
                     instructorEssayDisplayElement.classList.add('hidden');
                     replayContentElement.classList.remove('hidden');
-                } else { // If final essay was shown when maximized
+                } else {
                     instructorEssayDisplayElement.classList.remove('hidden');
                     replayContentElement.classList.add('hidden');
                 }
             }
         }
-
-        // --- Replay functions specifically for the overlay ---
-        // These now call the generic startReplay/stopReplay/jumpToReplayTime functions
-        // and pass the overlay-specific elements and a flag.
 
         // --- Download as Docx Function ---
         function downloadDocx() {
@@ -1702,13 +1605,10 @@
 
             const essayHtml = currentEssayDataForReplay.essayContent;
             
-            // Safely get userId and submittedAt for filename
             const downloadUserId = currentEssayDataForReplay.userId || 'unknown_user';
             const downloadSubmittedAt = currentEssayDataForReplay.submittedAt ? new Date(currentEssayDataForReplay.submittedAt.toDate()).toISOString().slice(0, 10) : 'no_date';
             const filename = `essay_${downloadUserId.substring(0, 8)}_${downloadSubmittedAt}.doc`;
 
-
-            // Simple HTML to DOC conversion
             const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Document</title></head><body>";
             const footer = "</body></html>";
             const sourceHTML = header + essayHtml + footer;
@@ -1719,7 +1619,7 @@
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
-            a.click();
+a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -1736,8 +1636,14 @@
         boldBtn.addEventListener('click', () => formatDoc('bold'));
         italicBtn.addEventListener('click', () => formatDoc('italic'));
         underlineBtn.addEventListener('click', () => formatDoc('underline'));
-        ulBtn.addEventListener('click', () => formatDoc('insertUnorderedList'));
-        olBtn.addEventListener('click', () => formatDoc('insertOrderedList'));
+        ulBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            formatDoc('insertUnorderedList');
+        });
+        olBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            formatDoc('insertOrderedList');
+        });
         fontFamilySelect.addEventListener('change', (event) => formatDoc('fontName', event.target.value));
         fontSizeSelect.addEventListener('change', (event) => formatDoc('fontSize', event.target.value));
         headerSelect.addEventListener('change', (event) => formatDoc('formatBlock', `<${event.target.value}>`));
@@ -1746,25 +1652,8 @@
         justifyRightBtn.addEventListener('click', () => formatDoc('justifyRight'));
         justifyFullBtn.addEventListener('click', () => formatDoc('justifyFull'));
         
-        indentBtn.addEventListener('click', () => {
-            const selection = window.getSelection();
-            if (selection.rangeCount) {
-                const range = selection.getRangeAt(0);
-                let currentElement = range.commonAncestorContainer;
-                if (currentElement && currentElement.nodeType === Node.TEXT_NODE) {
-                    currentElement = currentElement.parentNode;
-                }
-                const parentBlock = currentElement ? currentElement.closest('p, div, li, blockquote') : null;
-
-                if (parentBlock && (parentBlock.tagName === 'LI' || parentBlock.tagName === 'BLOCKQUOTE' || (parentBlock.style && parentBlock.style.marginLeft))) {
-                    formatDoc('outdent');
-                } else {
-                    formatDoc('indent');
-                }
-            } else {
-                formatDoc('indent');
-            }
-        });
+        increaseIndentBtn.addEventListener('click', () => formatDoc('indent'));
+        decreaseIndentBtn.addEventListener('click', () => formatDoc('outdent'));
 
         blockquoteBtn.addEventListener('click', () => {
             const selection = window.getSelection();
@@ -1869,6 +1758,36 @@
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            const dot = sunIcon.parentElement;
+
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.remove('light-mode');
+                    themeToggle.checked = true;
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                    dot.style.transform = 'translateX(100%)';
+                } else {
+                    document.documentElement.classList.add('light-mode');
+                    themeToggle.checked = false;
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                    dot.style.transform = 'translateX(0)';
+                }
+            };
+
+            themeToggle.addEventListener('change', () => {
+                const theme = themeToggle.checked ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            });
+
+            const savedTheme = localStorage.getItem('theme') || 'dark'; // Default to light
+            applyTheme(savedTheme);
+
             setupFirebase();
             showStudentView();
         });
