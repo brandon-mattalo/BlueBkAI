@@ -241,6 +241,19 @@
         .light-mode .spinner {
             border-top-color: var(--accent-color);
         }
+
+        .logo-dark {
+            display: inline-block;
+        }
+        .logo-light {
+            display: none;
+        }
+        .light-mode .logo-dark {
+            display: none;
+        }
+        .light-mode .logo-light {
+            display: inline-block;
+        }
     </style>
 </head>
 <body class="p-4">
@@ -257,8 +270,11 @@
                 </div>
             </label>
         </div>
-        <h1 class="text-4xl font-bold text-center text-gray-200 mb-6">BlueBook Writing Platform</h1>
-        <p class="text-center text-gray-400 mb-8">Your secure environment for authentic writing. All activity is audited to ensure academic integrity.</p>
+        <div class="absolute top-4 left-4">
+            <img src="logo-darkmode.png" alt="BlueBook Logo" class="w-48 logo-dark">
+            <img src="logo.png" alt="BlueBook Logo" class="w-48 logo-light">
+        </div>
+        <div class="h-20"></div> <!-- Spacer to push content down -->
 
         <div class="view-switcher flex justify-center space-x-4 mb-8">
             <button id="student-view-btn" class="active">Student View</button>
